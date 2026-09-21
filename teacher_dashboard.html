@@ -15,7 +15,7 @@
             padding: 20px;
             box-sizing: border-box;
             display: flex;
-            flex-direction: column; /* 가로 배치에서 세로 배치(상단 네비, 하단 콘텐츠)로 변경 */
+            flex-direction: column; 
             gap: 20px;
             color: #2c3e50;
         }
@@ -30,7 +30,7 @@
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
 
-        /* 상단 네비게이션 영역 (기존 사이드바 대체) */
+        /* 상단 네비게이션 영역 */
         .top-nav {
             display: flex;
             align-items: center;
@@ -74,7 +74,6 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        /* 우측 정렬을 위한 헬퍼 클래스 */
         .ml-auto {
             margin-left: auto;
         }
@@ -107,7 +106,6 @@
             gap: 15px;
         }
 
-        /* 제목과 학생 수 표시를 나란히 두기 위한 컨테이너 */
         .title-container {
             display: flex;
             align-items: center;
@@ -116,7 +114,7 @@
 
         .filter-group {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -131,7 +129,6 @@
             height: 40px;
         }
 
-        /* 복수 선택 가능한 버튼(Pill) 필터 스타일 */
         .filter-pills {
             display: flex;
             gap: 8px;
@@ -161,7 +158,7 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
         }
 
-        /* 명함 갤러리 뷰 */
+        /* 갤러리 그리드 */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -260,7 +257,24 @@
             background: rgba(255, 255, 255, 0.6);
         }
 
-        /* 모달 (상세 정보 팝업) */
+        /* 삭제 버튼 스타일 */
+        .delete-btn {
+            background-color: #ff7675;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background-color: #d63031;
+        }
+
+        /* 팝업 모달 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -299,7 +313,6 @@
         .modal-item span { display: block; font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 4px; }
         .modal-item div { font-size: 16px; font-weight: 500; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; }
 
-        /* 로딩 스피너 */
         .loading {
             text-align: center;
             font-size: 18px;
@@ -319,17 +332,15 @@
 </head>
 <body>
 
-    <!-- 가로로 변경된 상단 네비게이션 -->
     <div class="top-nav glass-panel">
         <h2>🎯 면접 대비반 관리</h2>
         <button class="tab-btn active" onclick="switchTab('gallery')">📇 참여 학생 정보 카드</button>
         <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
-        <button class="tab-btn ml-auto" onclick="fetchData()" style="background: rgba(255,255,255,0.2); border: 1px dashed #333;">🔄 새로고침</button>
+        <button class="tab-btn ml-auto" onclick="fetchData()" style="background: rgba(255,255,255,0.2); border: 1px dashed #333;">🔄 서버 동기화</button>
     </div>
 
     <div class="main-content glass-panel">
         <div class="header-section">
-            <!-- 제목과 학생 수를 동일한 크기(h3)로 같은 줄에 배치 -->
             <div class="title-container">
                 <h3 id="currentTabTitle" style="margin: 0; font-size: 22px;">면접 대비반 참여 학생 정보 카드</h3>
                 <h3 id="studentCount" style="margin: 0; font-size: 22px; color: #e15f41;">(총 0명)</h3>
@@ -341,9 +352,17 @@
                     <option value="10월 19일(월)">10월 19일(월)</option>
                     <option value="11월 25일(화)">11월 25일(화)</option>
                 </select>
+
+                <!-- 동적으로 생성될 학급 필터 -->
+                <select id="filterClass" onchange="renderAll()">
+                    <option value="all">🏫 모든 학급</option>
+                </select>
                 
-                <!-- 복수 선택 가능한 계열 필터 버튼들 -->
-                <div class="filter-pills" id="trackFilters">
+                <!-- 추가된 정렬 및 초기화 버튼 -->
+                <button class="filter-pill" id="sortBtn" onclick="toggleSort()" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;">🔃 학번 정렬</button>
+                <button class="filter-pill" onclick="resetFilters()" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c;">🔄 필터 초기화</button>
+
+                <div class="filter-pills" id="trackFilters" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 10px;">
                     <button class="filter-pill active" onclick="toggleTrack(this, 'all')">전체</button>
                     <button class="filter-pill" onclick="toggleTrack(this, '자연')">자연</button>
                     <button class="filter-pill" onclick="toggleTrack(this, '인문')">인문</button>
@@ -356,12 +375,10 @@
 
         <div id="loading" class="loading">데이터를 불러오는 중입니다... ⏳</div>
 
-        <!-- 탭 1: 학생 정보 카드(갤러리) 뷰 -->
         <div id="gallery-tab" class="tab-content active">
             <div class="gallery-grid" id="galleryContainer"></div>
         </div>
 
-        <!-- 탭 2: 테이블 뷰 -->
         <div id="table-tab" class="tab-content">
             <div class="table-container">
                 <table>
@@ -374,6 +391,7 @@
                             <th>목표 대학/전형/학과</th>
                             <th>1차 합격 진행 여부 파악</th>
                             <th>실제 면접일</th>
+                            <th>관리</th> <!-- 삭제 열 추가 -->
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -387,7 +405,6 @@
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">X</button>
             <h2 id="m-name" style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">이름</h2>
-            
             <div class="modal-item"><span>학번 / 전화번호</span><div id="m-info"></div></div>
             <div class="modal-item"><span>모의면접 희망 날짜</span><div id="m-date"></div></div>
             <div class="modal-item"><span>목표 전형 정보</span><div id="m-target"></div></div>
@@ -403,9 +420,10 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
         
         let globalData = []; 
-        let selectedTracks = new Set(['all']); // 복수 선택된 계열을 저장하는 집합
+        let selectedTracks = new Set(['all']);
+        let isSortedAsc = false; // 정렬 상태 추적 변수
 
-        // 탭 전환 함수
+        // 탭 전환
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -416,16 +434,16 @@
             document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '면접 대비반 참여 학생 정보 카드' : '전체 수합 데이터';
         }
 
-        // 복수 선택 필터 토글 함수
+        // 복수 선택 계열 필터
         function toggleTrack(btnElement, trackVal) {
             if (trackVal === 'all') {
                 selectedTracks.clear();
                 selectedTracks.add('all');
-                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('#trackFilters .filter-pill').forEach(p => p.classList.remove('active'));
                 btnElement.classList.add('active');
             } else {
                 selectedTracks.delete('all');
-                document.querySelector('.filter-pill[onclick*="all"]').classList.remove('active');
+                document.querySelector('#trackFilters .filter-pill[onclick*="all"]').classList.remove('active');
                 
                 if (selectedTracks.has(trackVal)) {
                     selectedTracks.delete(trackVal);
@@ -435,29 +453,69 @@
                     btnElement.classList.add('active');
                 }
                 
-                // 모두 해제되면 다시 '전체' 활성화
                 if (selectedTracks.size === 0) {
                     selectedTracks.add('all');
-                    document.querySelector('.filter-pill[onclick*="all"]').classList.add('active');
+                    document.querySelector('#trackFilters .filter-pill[onclick*="all"]').classList.add('active');
                 }
             }
             renderAll();
         }
 
-        // 구글 시트 데이터 로드
+        // 필터 모두 초기화 기능
+        function resetFilters() {
+            document.getElementById('filterDate').value = 'all';
+            document.getElementById('filterClass').value = 'all';
+            
+            // 계열 토글 '전체'로 초기화
+            toggleTrack(document.querySelector('#trackFilters .filter-pill[onclick*="all"]'), 'all');
+            // 토글 함수 내부에서 renderAll()이 실행됨
+        }
+
+        // 정렬 기능 (학번 오름차순)
+        function toggleSort() {
+            isSortedAsc = !isSortedAsc;
+            const sortBtn = document.getElementById('sortBtn');
+            if(isSortedAsc) {
+                sortBtn.innerText = '🔽 학번순 (켜짐)';
+                sortBtn.style.background = '#2ecc71';
+                sortBtn.style.color = 'white';
+            } else {
+                sortBtn.innerText = '🔃 학번 정렬';
+                sortBtn.style.background = 'rgba(46, 204, 113, 0.2)';
+                sortBtn.style.color = '#2c3e50';
+            }
+            renderAll();
+        }
+
+        // 학급 필터 자동 생성 (학번 앞 3자리 기준)
+        function populateClassFilter() {
+            const classFilter = document.getElementById('filterClass');
+            const classes = new Set();
+            
+            globalData.forEach(row => {
+                const id = getFlexibleValue(row, '학번', '');
+                if (id && id.toString().length >= 3) {
+                    classes.add(id.toString().substring(0, 3)); // 305 추출
+                }
+            });
+            
+            const sortedClasses = Array.from(classes).sort();
+            classFilter.innerHTML = '<option value="all">🏫 모든 학급</option>';
+            
+            sortedClasses.forEach(cls => {
+                classFilter.innerHTML += `<option value="${cls}">${cls}반</option>`;
+            });
+        }
+
         function fetchData() {
             const loading = document.getElementById('loading');
-            const gallery = document.getElementById('galleryContainer');
-            const table = document.getElementById('tableBody');
-            
             loading.style.display = 'block';
-            gallery.innerHTML = '';
-            table.innerHTML = '';
 
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(data => {
                     globalData = data;
+                    populateClassFilter(); // 데이터 불러온 후 학급 드롭다운 생성
                     loading.style.display = 'none';
                     renderAll();
                 })
@@ -467,13 +525,11 @@
                 });
         }
 
-        // 일반 텍스트 데이터 추출용 헬퍼 함수
         function getFlexibleValue(student, keyword, defaultVal = '') {
             const foundKey = Object.keys(student).find(k => k.includes(keyword));
             return foundKey ? student[foundKey] : defaultVal;
         }
 
-        // '1차 합격 진행 여부 파악' 전용 추출 및 변환 함수
         function getMethodValue(student) {
             const keys = Object.keys(student);
             let rawValue = '미입력';
@@ -486,53 +542,57 @@
                     }
                 }
             }
-
             if (rawValue === '미입력') return rawValue;
-
-            if (rawValue.includes('발표 후')) {
-                return '1차 합격 후 면접 진행';
-            } else if (rawValue.includes('상관없이') || rawValue.includes('없이 바로')) {
-                return '1차 합격 없이 바로 면접 진행';
-            }
+            if (rawValue.includes('발표 후')) return '1차 합격 후 면접 진행';
+            if (rawValue.includes('상관없이') || rawValue.includes('없이 바로')) return '1차 합격 없이 바로 면접 진행';
             return rawValue; 
         }
 
         function formatToDateOnly(dateString) {
             if (!dateString || dateString === '해당없음' || dateString === '-' || dateString === '미입력') return dateString;
-            if (dateString.includes('T')) {
-                return dateString.split('T')[0];
+            if (dateString.toString().includes('T')) {
+                return dateString.toString().split('T')[0];
             }
             return dateString;
         }
 
-        // 전체 렌더링 (학생 수 업데이트 포함)
+        // 전체 렌더링
         function renderAll() {
             const dateFilter = document.getElementById('filterDate').value;
+            const classFilter = document.getElementById('filterClass').value;
             
-            const filteredData = globalData.filter(row => {
+            let filteredData = globalData.filter(row => {
                 const d = getFlexibleValue(row, '날짜');
                 const t = getFlexibleValue(row, '계열');
+                const id = getFlexibleValue(row, '학번', '').toString();
                 
+                // 날짜, 학급, 계열 필터 동시 검사
                 let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
+                let classMatch = (classFilter === 'all') || id.startsWith(classFilter);
                 
                 let trackMatch = selectedTracks.has('all');
                 if (!trackMatch) {
                     for (let selected of selectedTracks) {
                         if (t.includes(selected)) {
-                            trackMatch = true;
-                            break;
+                            trackMatch = true; break;
                         }
                     }
                 }
                 
-                return dateMatch && trackMatch;
+                return dateMatch && classMatch && trackMatch;
             });
 
-            // 필터링된 학생 수 화면에 표시
-            const countElement = document.getElementById('studentCount');
-            if(countElement) {
-                countElement.innerText = `(총 ${filteredData.length}명)`;
+            // 정렬 적용 (켜져 있을 경우 학번 오름차순)
+            if (isSortedAsc) {
+                filteredData.sort((a, b) => {
+                    const idA = getFlexibleValue(a, '학번', '').toString();
+                    const idB = getFlexibleValue(b, '학번', '').toString();
+                    return idA.localeCompare(idB);
+                });
             }
+
+            const countElement = document.getElementById('studentCount');
+            if(countElement) countElement.innerText = `(총 ${filteredData.length}명)`;
 
             renderGallery(filteredData);
             renderTable(filteredData);
@@ -555,7 +615,6 @@
                 const dept = getFlexibleValue(student, '학과');
                 const date = getFlexibleValue(student, '날짜');
                 const track = getFlexibleValue(student, '계열');
-                
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
 
                 const card = document.createElement('div');
@@ -583,9 +642,11 @@
             data.forEach(student => {
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
-                
                 const method = getMethodValue(student);
                 const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
+                
+                // 삭제 기능용 고유 타임스탬프
+                const timestamp = getFlexibleValue(student, '타임스탬프', '');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -596,9 +657,36 @@
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${method}</td>
                     <td>${actualDate}</td>
+                    <td><button class="delete-btn" onclick="deleteData('${timestamp}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // 데이터 삭제 함수 (서버 통신)
+        async function deleteData(timestamp) {
+            if (!timestamp) {
+                alert('삭제할 수 없는 데이터입니다 (타임스탬프 누락).');
+                return;
+            }
+            if (!confirm('이 학생의 데이터를 정말 삭제하시겠습니까? (삭제 시 복구 불가)')) return;
+
+            // 1. 화면에서 먼저 즉시 삭제하여 반응성 확보
+            globalData = globalData.filter(row => getFlexibleValue(row, '타임스탬프', '').toString() !== timestamp.toString());
+            renderAll(); 
+
+            // 2. 구글 시트로 삭제 요청 전송
+            if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') return;
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete', timestamp: timestamp })
+                });
+            } catch (error) {
+                console.error('데이터 삭제 실패:', error);
+            }
         }
 
         function openModal(student) {
