@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대입 수시 면접 대비반 사전조사</title>
+    <style>
+        /* 글래스모피즘(Glassmorphism) 배경 설정 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 폼 컨테이너 글래스 효과 */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            color: #333;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        /* 세부 항목 그룹화 (전형 정보 등) */
+        .sub-group {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px dashed rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        /* 입력 필드 글래스 효과 */
+        input[type="text"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 15px;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+        }
+        
+        /* 마지막 input margin 제거 */
+        input:last-child, select:last-child { margin-bottom: 0; }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.8);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* 라디오 버튼 스타일링 */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-item input[type="radio"] {
+            margin-right: 10px;
+            accent-color: #667eea;
+            width: auto;
+        }
+        
+        .radio-item label {
+            margin-bottom: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        /* 조건부 노출 영역 */
+        #passDateGroup {
+            display: none; /* 초기에는 숨김 */
+            margin-top: 10px;
+            padding-left: 25px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 제출 버튼 */
+        button[type="submit"] {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 1) 0%, rgba(118, 75, 162, 1) 100%);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: rgba(160, 174, 192, 0.8);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glass-container">
+        <h2>✨ 수시 면접 대비반 사전조사</h2>
+        <form id="interviewForm">
+            
+            <div class="form-group">
+                <label for="studentId">📌 학번 (예: 30101)</label>
+                <input type="text" id="studentId" required placeholder="학번 5자리를 입력해주세요">
+            </div>
+
+            <div class="form-group">
+                <label for="studentName">👤 이름</label>
+                <input type="text" id="studentName" required placeholder="이름을 입력해주세요">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">📱 전화번호</label>
+                <input type="tel" id="phone" required placeholder="010-0000-0000" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}">
+            </div>
+
+            <div class="form-group">
+                <label for="participationDate">🗓️ 면접 대비반 참여 희망 날짜</label>
+                <select id="participationDate" required>
+                    <option value="" disabled selected>희망 날짜를 선택해주세요</option>
+                    <option value="10월 19일(월)">10월 19일(월)</option>
+                    <option value="11월 25일(화)">11월 25일(화)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>🏫 연습하고 싶은 전형 정보 <span style="font-size: 13px; color: #d63031; font-weight: normal;">(가장 연습하고 싶은 것 1가지 작성!)</span></label>
+                <div class="sub-group">
+                    <select id="majorField" required>
+                        <option value="" disabled selected>지원 학과 계열 선택</option>
+                        <option value="자연(자연과학, 공학, 보건 등)">자연(자연과학, 공학, 보건 등)</option>
+                        <option value="인문(사회, 어문 등)">인문(사회, 어문 등)</option>
+                        <option value="교대+사범대">교대+사범대</option>
+                        <option value="의약학계열">의약학계열</option>
+                        <option value="예체능">예체능</option>
+                    </select>
+                    <input type="text" id="university" required placeholder="대학 (예: 한국대)">
+                    <input type="text" id="admissionType" required placeholder="전형 (예: 학생부종합)">
+                    <input type="text" id="department" required placeholder="학과 (예: 컴퓨터공학과)">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🤔 1차 합격 진행 여부 파악</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="type1" name="interviewType" value="1차 합격 발표 후 면접 진행" required>
+                        <label for="type1">1차 합격 발표 후 면접 진행</label>
+                    </div>
+                    
+                    <!-- 1차 합격 후 진행을 선택했을 때만 나타나는 날짜 선택창 -->
+                    <div id="passDateGroup">
+                        <label for="firstPassDate" style="font-size: 13px; color: #d63031;">└ 1차 합격자 발표일을 선택해주세요 📍</label>
+                        <input type="date" id="firstPassDate">
+                    </div>
+
+                    <div class="radio-item" style="margin-top: 5px;">
+                        <input type="radio" id="type2" name="interviewType" value="1차 합격 없이 바로 면접 진행">
+                        <label for="type2">1차 합격 없이 바로 면접 진행</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="actualInterviewDate">🚨 실제 면접 진행일</label>
+                <input type="date" id="actualInterviewDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="concern">💬 면접 관련 솔직한 고민</label>
+                <textarea id="concern" required placeholder="긴장을 많이 한다거나, 특정 질문이 두렵다거나 등 편하게 적어주세요."></textarea>
+            </div>
+
+            <button type="submit">제출하기</button>
+        </form>
+    </div>
+
+    <script>
+        // ★ GAS 웹앱 URL 입력 ★
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
+
+        // '1차 합격 후 진행' 선택 시 날짜 입력창 보이기/숨기기 로직
+        const radio1 = document.getElementById('type1');
+        const radio2 = document.getElementById('type2');
+        const passDateGroup = document.getElementById('passDateGroup');
+        const firstPassDateInput = document.getElementById('firstPassDate');
+
+        function togglePassDate() {
+            if (radio1.checked) {
+                passDateGroup.style.display = 'block';
+                firstPassDateInput.required = true; // 필수 입력으로 변경
+            } else {
+                passDateGroup.style.display = 'none';
+                firstPassDateInput.required = false; // 필수 입력 해제
+                firstPassDateInput.value = ''; // 값 초기화
+            }
+        }
+
+        radio1.addEventListener('change', togglePassDate);
+        radio2.addEventListener('change', togglePassDate);
+
+        // 폼 제출 로직
+        document.getElementById('interviewForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // --- 입력 정보 확인용 팝업(Confirm) 추가 ---
+            const studentId = document.getElementById('studentId').value;
+            const studentName = document.getElementById('studentName').value;
+            const phone = document.getElementById('phone').value;
+            const participationDate = document.getElementById('participationDate').value;
+            
+            const confirmMessage = `입력하신 정보가 맞는지 확인해주세요.
+
+` + 
+                                   `▶ 학번: ${studentId}
+` + 
+                                   `▶ 이름: ${studentName}
+` + 
+                                   `▶ 전화번호: ${phone}
+` + 
+                                   `▶ 참여 희망 날짜: ${participationDate}
+
+` + 
+                                   `맞으면 [확인], 수정하려면 [취소]를 눌러주세요.`;
+            
+            // 사용자가 '취소'를 누르면 제출 중단
+            if (!confirm(confirmMessage)) {
+                return; 
+            }
+            // -------------------------------------------
+            
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '제출 중... ⏳';
+            submitBtn.disabled = true;
+            
+            // 폼 데이터 수집
+            const data = {
+                studentId: studentId,
+                studentName: studentName,
+                phone: phone,
+                participationDate: participationDate,
+                majorField: document.getElementById('majorField').value,
+                university: document.getElementById('university').value,
+                admissionType: document.getElementById('admissionType').value,
+                department: document.getElementById('department').value,
+                interviewType: document.querySelector('input[name="interviewType"]:checked').value,
+                firstPassDate: document.getElementById('firstPassDate').value || "해당없음",
+                actualInterviewDate: document.getElementById('actualInterviewDate').value,
+                concern: document.getElementById('concern').value
+            };
+
+            if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+                console.log("수집된 데이터:", data);
+                alert('프론트엔드 UI 테스트 완료!\n(F12 콘솔에서 세분화된 데이터를 확인하세요)\n\nGAS URL 연동 후 시트로 전송됩니다.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('사전조사가 성공적으로 제출되었습니다! 🎉');
+                document.getElementById('interviewForm').reset();
+                togglePassDate(); // 날짜 입력창 상태 초기화
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
