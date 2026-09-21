@@ -273,7 +273,6 @@
 </head>
 <body>
 
-    <!-- 좌측 사이드바 -->
     <div class="sidebar glass-panel">
         <h2>🎯 면접 대비반 관리</h2>
         <button class="tab-btn active" onclick="switchTab('gallery')">📇 명함 갤러리 뷰</button>
@@ -281,10 +280,7 @@
         <button class="tab-btn" onclick="fetchData()" style="margin-top: auto; background: rgba(255,255,255,0.2); border: 1px dashed #333; justify-content: center;">🔄 새로고침</button>
     </div>
 
-    <!-- 우측 메인 콘텐츠 -->
     <div class="main-content glass-panel">
-        
-        <!-- 상단 필터 영역 -->
         <div class="header-section">
             <h3 id="currentTabTitle" style="margin: 0; font-size: 22px;">학생 명함 갤러리</h3>
             <div class="filter-group">
@@ -306,14 +302,10 @@
 
         <div id="loading" class="loading">데이터를 불러오는 중입니다... ⏳</div>
 
-        <!-- 탭 1: 갤러리 뷰 -->
         <div id="gallery-tab" class="tab-content active">
-            <div class="gallery-grid" id="galleryContainer">
-                <!-- 자바스크립트로 카드가 생성되는 곳 -->
-            </div>
+            <div class="gallery-grid" id="galleryContainer"></div>
         </div>
 
-        <!-- 탭 2: 테이블 뷰 -->
         <div id="table-tab" class="tab-content">
             <div class="table-container">
                 <table>
@@ -328,15 +320,12 @@
                             <th>실제 면접일</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody">
-                        <!-- 자바스크립트로 행이 생성되는 곳 -->
-                    </tbody>
+                    <tbody id="tableBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- 상세 정보 모달 -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">X</button>
@@ -354,16 +343,8 @@
         // ★ GAS 웹앱 URL (배포 후 수정하세요) ★
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
         
-        let globalData = []; // 서버에서 불러온 원본 데이터
+        let globalData = []; 
 
-        // 더미 데이터 (테스트용) - GAS 연동 전 화면 확인용
-        const dummyData = [
-            {"타임스탬프":"2026-09-21 10:00:00", "학번":"30101", "이름":"김철수", "전화번호":"010-1234-5678", "참여 희망 날짜":"10월 19일(월)", "지원 계열":"자연(자연과학, 공학, 보건 등)", "대학":"한국대", "전형":"학생부종합", "학과":"컴퓨터공학과", "면접 진행 방식":"1차 합격 없이 바로 면접 진행", "1차 합격 발표일":"해당없음", "실제 면접일":"2026-11-01", "솔직한 고민":"생기부 기반 꼬리 질문이 들어오면 머리가 하얗게 될 것 같아서 걱정입니다."},
-            {"타임스탬프":"2026-09-21 11:30:00", "학번":"30215", "이름":"이영희", "전화번호":"010-9876-5432", "참여 희망 날짜":"11월 25일(화)", "지원 계열":"인문(사회, 어문 등)", "대학":"서울대", "전형":"일반전형", "학과":"경영학과", "면접 진행 방식":"1차 합격 발표 후 면접 진행", "1차 합격 발표일":"2026-11-20", "실제 면접일":"2026-11-28", "솔직한 고민":"말을 너무 빨리 하는 습관이 있어서 고치고 싶습니다."},
-            {"타임스탬프":"2026-09-21 14:10:00", "학번":"30320", "이름":"박민수", "전화번호":"010-5555-4444", "참여 희망 날짜":"10월 19일(월)", "지원 계열":"교대+사범대", "대학":"교원대", "전형":"학생부교과", "학과":"수학교육과", "면접 진행 방식":"1차 합격 발표 후 면접 진행", "1차 합격 발표일":"2026-10-10", "실제 면접일":"2026-10-25", "솔직한 고민":"교직 인적성 면접 기출문제를 어떻게 접근해야 할지 감이 안 잡힙니다."}
-        ];
-
-        // 탭 전환 로직
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -374,19 +355,11 @@
             document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '학생 명함 갤러리' : '전체 수합 데이터';
         }
 
-        // 데이터 가져오기 (GET)
         function fetchData() {
             const loading = document.getElementById('loading');
             const gallery = document.getElementById('galleryContainer');
             const table = document.getElementById('tableBody');
             
-            if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
-                console.warn('웹앱 URL이 설정되지 않아 더미 데이터를 표시합니다.');
-                globalData = dummyData;
-                renderAll();
-                return;
-            }
-
             loading.style.display = 'block';
             gallery.innerHTML = '';
             table.innerHTML = '';
@@ -404,16 +377,28 @@
                 });
         }
 
-        // 렌더링 (필터 적용)
+        // 특정 키워드가 포함된 열(Column)의 데이터를 유연하게 찾는 헬퍼 함수
+        function getFlexibleValue(student, keyword, defaultVal = '') {
+            const foundKey = Object.keys(student).find(k => k.includes(keyword));
+            return foundKey ? student[foundKey] : defaultVal;
+        }
+
+        function formatToDateOnly(dateString) {
+            if (!dateString || dateString === '해당없음' || dateString === '-') return dateString;
+            // "2026-10-26T15:00:00.000Z" 형식이면 T 앞의 날짜만 추출
+            if (dateString.includes('T')) {
+                return dateString.split('T')[0];
+            }
+            return dateString;
+        }
+
         function renderAll() {
             const dateFilter = document.getElementById('filterDate').value;
             const trackFilter = document.getElementById('filterTrack').value;
             
-            // 필터링
             const filteredData = globalData.filter(row => {
-                // 구글 시트 항목명이 다를 수 있으므로 포함(includes)으로 유연하게 체크
-                const d = row['참여 희망 날짜'] || '';
-                const t = row['지원 계열'] || row['계열'] || '';
+                const d = getFlexibleValue(row, '날짜');
+                const t = getFlexibleValue(row, '계열');
                 
                 let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
                 let trackMatch = (trackFilter === 'all') || t.includes(trackFilter);
@@ -425,7 +410,6 @@
             renderTable(filteredData);
         }
 
-        // 1. 명함 갤러리 렌더링
         function renderGallery(data) {
             const container = document.getElementById('galleryContainer');
             container.innerHTML = '';
@@ -435,21 +419,19 @@
                 return;
             }
 
-            data.forEach((student, index) => {
-                const name = student['이름'] || '이름없음';
-                const id = student['학번'] || '-';
-                const univ = student['대학'] || '';
-                const type = student['전형'] || '';
-                const dept = student['학과'] || '';
-                const date = student['참여 희망 날짜'] || '';
-                const track = student['지원 계열'] || student['계열'] || '';
+            data.forEach((student) => {
+                const name = getFlexibleValue(student, '이름', '이름없음');
+                const id = getFlexibleValue(student, '학번', '-');
+                const univ = getFlexibleValue(student, '대학');
+                const type = getFlexibleValue(student, '전형');
+                const dept = getFlexibleValue(student, '학과');
+                const date = getFlexibleValue(student, '날짜');
+                const track = getFlexibleValue(student, '계열');
                 
-                // 계열별 태그 추출 (괄호 앞부분만)
-                const shortTrack = track.split('(')[0].trim();
+                const shortTrack = track ? track.split('(')[0].trim() : '-';
 
                 const card = document.createElement('div');
                 card.className = 'card';
-                // 클릭 시 모달 열기 (전체 데이터 객체를 넘김)
                 card.onclick = () => openModal(student);
 
                 card.innerHTML = `
@@ -466,41 +448,51 @@
             });
         }
 
-        // 2. 테이블 렌더링
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
             data.forEach(student => {
+                const track = getFlexibleValue(student, '계열');
+                const shortTrack = track ? track.split('(')[0].trim() : '-';
+                
+                const method = getFlexibleValue(student, '진행 여부', getFlexibleValue(student, '방식', '-'));
+                const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><b>${student['참여 희망 날짜'] || '-'}</b></td>
-                    <td>${student['학번'] || '-'}</td>
-                    <td><b>${student['이름'] || '-'}</b></td>
-                    <td>${(student['지원 계열'] || student['계열'] || '').split('(')[0]}</td>
-                    <td>${student['대학'] || ''} / ${student['전형'] || ''} / ${student['학과'] || ''}</td>
-                    <td>${student['면접 진행 방식'] || '-'}</td>
-                    <td>${student['실제 면접일'] || '-'}</td>
+                    <td><b>${getFlexibleValue(student, '날짜', '-')}</b></td>
+                    <td>${getFlexibleValue(student, '학번', '-')}</td>
+                    <td><b>${getFlexibleValue(student, '이름', '-')}</b></td>
+                    <td>${shortTrack}</td>
+                    <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
+                    <td>${method}</td>
+                    <td>${actualDate}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 모달 열기/닫기 로직
         function openModal(student) {
-            document.getElementById('m-name').innerText = (student['학번'] || '') + ' ' + (student['이름'] || '');
-            document.getElementById('m-info').innerText = `📞 ${student['전화번호'] || '-'}`;
-            document.getElementById('m-date').innerText = `📌 ${student['참여 희망 날짜'] || '-'}`;
-            document.getElementById('m-target').innerText = `🏫 ${student['대학'] || ''} | ${student['전형'] || ''} | ${student['학과'] || ''}`;
+            document.getElementById('m-name').innerText = getFlexibleValue(student, '학번', '') + ' ' + getFlexibleValue(student, '이름', '');
+            document.getElementById('m-info').innerText = `📞 ${getFlexibleValue(student, '전화번호', '-')}`;
+            document.getElementById('m-date').innerText = `📌 ${getFlexibleValue(student, '날짜', '-')}`;
+            document.getElementById('m-target').innerText = `🏫 ${getFlexibleValue(student, '대학')} | ${getFlexibleValue(student, '전형')} | ${getFlexibleValue(student, '학과')}`;
             
-            let scheduleText = `✅ 진행 방식: ${student['면접 진행 방식'] || '-'}<br>`;
-            if(student['1차 합격 발표일'] && student['1차 합격 발표일'] !== '해당없음') {
-                scheduleText += `🎯 1차 발표: ${student['1차 합격 발표일']}<br>`;
+            // 키워드로 유연하게 값 추출
+            const method = getFlexibleValue(student, '진행 여부 파악', getFlexibleValue(student, '방식', '-'));
+            const passDate = formatToDateOnly(getFlexibleValue(student, '1차 합격', '해당없음'));
+            const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
+            const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
+
+            let scheduleText = `✅ 진행 방식: ${method}<br>`;
+            if(passDate && passDate !== '해당없음' && passDate !== '-') {
+                scheduleText += `🎯 1차 발표: ${passDate}<br>`;
             }
-            scheduleText += `🚨 실제 면접: ${student['실제 면접일'] || '-'}`;
+            scheduleText += `🚨 실제 면접: ${actualDate}`;
             
             document.getElementById('m-schedule').innerHTML = scheduleText;
-            document.getElementById('m-concern').innerText = student['솔직한 고민'] || '입력된 내용이 없습니다.';
+            document.getElementById('m-concern').innerText = concern;
 
             document.getElementById('detailModal').style.display = 'flex';
         }
@@ -509,12 +501,10 @@
             document.getElementById('detailModal').style.display = 'none';
         }
 
-        // 모달 외부 클릭 시 닫기
         document.getElementById('detailModal').addEventListener('click', function(e) {
             if(e.target === this) closeModal();
         });
 
-        // 초기 실행
         window.onload = fetchData;
     </script>
 </body>
