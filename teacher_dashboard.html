@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>면접 대비반 교사용 대시보드</title>
+    <style>
+        /* 글래스모피즘 기본 테마 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            gap: 20px;
+            color: #2c3e50;
+        }
+
+        /* 글래스모피즘 패널 공통 스타일 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        /* 사이드바 영역 */
+        .sidebar {
+            width: 250px;
+            padding: 25px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+            padding-bottom: 15px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #34495e;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateX(5px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 메인 콘텐츠 영역 */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.5);
+            font-weight: bold;
+            outline: none;
+        }
+
+        /* 명함 갤러리 뷰 */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed rgba(0,0,0,0.2);
+            padding-bottom: 10px;
+        }
+
+        .card-name {
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .card-id {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .card-tag {
+            display: inline-block;
+            background: rgba(255, 154, 158, 0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-target {
+            font-size: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        /* 테이블 뷰 */
+        .table-container {
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(5px);
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 모달 (상세 정보 팝업) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: rgba(255,0,0,0.1);
+            border: none;
+            border-radius: 50%;
+            width: 30px; height: 30px;
+            font-weight: bold;
+            color: #d63031;
+            cursor: pointer;
+        }
+
+        .modal-item { margin-bottom: 15px; }
+        .modal-item span { display: block; font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 4px; }
+        .modal-item div { font-size: 16px; font-weight: 500; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; }
+
+        /* 로딩 스피너 */
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 50px;
+            display: none;
+        }
+
+        @media screen and (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 15px; }
+            .sidebar h2 { width: 100%; margin-bottom: 10px; }
+            .tab-btn { flex: 1; text-align: center; justify-content: center; }
+            .main-content { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 좌측 사이드바 -->
+    <div class="sidebar glass-panel">
+        <h2>🎯 면접 대비반 관리</h2>
+        <button class="tab-btn active" onclick="switchTab('gallery')">📇 명함 갤러리 뷰</button>
+        <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
+        <button class="tab-btn" onclick="fetchData()" style="margin-top: auto; background: rgba(255,255,255,0.2); border: 1px dashed #333; justify-content: center;">🔄 새로고침</button>
+    </div>
+
+    <!-- 우측 메인 콘텐츠 -->
+    <div class="main-content glass-panel">
+        
+        <!-- 상단 필터 영역 -->
+        <div class="header-section">
+            <h3 id="currentTabTitle" style="margin: 0; font-size: 22px;">학생 명함 갤러리</h3>
+            <div class="filter-group">
+                <select id="filterDate" onchange="renderAll()">
+                    <option value="all">모든 날짜</option>
+                    <option value="10월 19일(월)">10월 19일(월)</option>
+                    <option value="11월 25일(화)">11월 25일(화)</option>
+                </select>
+                <select id="filterTrack" onchange="renderAll()">
+                    <option value="all">모든 계열</option>
+                    <option value="자연">자연계열</option>
+                    <option value="인문">인문계열</option>
+                    <option value="교대+사범대">사범계열</option>
+                    <option value="의약학계열">의약학계열</option>
+                    <option value="예체">예체능</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">데이터를 불러오는 중입니다... ⏳</div>
+
+        <!-- 탭 1: 갤러리 뷰 -->
+        <div id="gallery-tab" class="tab-content active">
+            <div class="gallery-grid" id="galleryContainer">
+                <!-- 자바스크립트로 카드가 생성되는 곳 -->
+            </div>
+        </div>
+
+        <!-- 탭 2: 테이블 뷰 -->
+        <div id="table-tab" class="tab-content">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>희망 날짜</th>
+                            <th>학번</th>
+                            <th>이름</th>
+                            <th>계열</th>
+                            <th>목표 대학/전형/학과</th>
+                            <th>진행 방식</th>
+                            <th>실제 면접일</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 자바스크립트로 행이 생성되는 곳 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상세 정보 모달 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">X</button>
+            <h2 id="m-name" style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">이름</h2>
+            
+            <div class="modal-item"><span>학번 / 전화번호</span><div id="m-info"></div></div>
+            <div class="modal-item"><span>모의면접 희망 날짜</span><div id="m-date"></div></div>
+            <div class="modal-item"><span>목표 전형 정보</span><div id="m-target"></div></div>
+            <div class="modal-item"><span>면접 진행 방식 / 1차 합격일 / 실제 면접일</span><div id="m-schedule"></div></div>
+            <div class="modal-item"><span>💬 솔직한 고민</span><div id="m-concern" style="background: rgba(255,234,167,0.4); min-height: 60px;"></div></div>
+        </div>
+    </div>
+
+    <script>
+        // ★ GAS 웹앱 URL (배포 후 수정하세요) ★
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
+        
+        let globalData = []; // 서버에서 불러온 원본 데이터
+
+        // 더미 데이터 (테스트용) - GAS 연동 전 화면 확인용
+        const dummyData = [
+            {"타임스탬프":"2026-09-21 10:00:00", "학번":"30101", "이름":"김철수", "전화번호":"010-1234-5678", "참여 희망 날짜":"10월 19일(월)", "지원 계열":"자연(자연과학, 공학, 보건 등)", "대학":"한국대", "전형":"학생부종합", "학과":"컴퓨터공학과", "면접 진행 방식":"1차 합격 없이 바로 면접 진행", "1차 합격 발표일":"해당없음", "실제 면접일":"2026-11-01", "솔직한 고민":"생기부 기반 꼬리 질문이 들어오면 머리가 하얗게 될 것 같아서 걱정입니다."},
+            {"타임스탬프":"2026-09-21 11:30:00", "학번":"30215", "이름":"이영희", "전화번호":"010-9876-5432", "참여 희망 날짜":"11월 25일(화)", "지원 계열":"인문(사회, 어문 등)", "대학":"서울대", "전형":"일반전형", "학과":"경영학과", "면접 진행 방식":"1차 합격 발표 후 면접 진행", "1차 합격 발표일":"2026-11-20", "실제 면접일":"2026-11-28", "솔직한 고민":"말을 너무 빨리 하는 습관이 있어서 고치고 싶습니다."},
+            {"타임스탬프":"2026-09-21 14:10:00", "학번":"30320", "이름":"박민수", "전화번호":"010-5555-4444", "참여 희망 날짜":"10월 19일(월)", "지원 계열":"교대+사범대", "대학":"교원대", "전형":"학생부교과", "학과":"수학교육과", "면접 진행 방식":"1차 합격 발표 후 면접 진행", "1차 합격 발표일":"2026-10-10", "실제 면접일":"2026-10-25", "솔직한 고민":"교직 인적성 면접 기출문제를 어떻게 접근해야 할지 감이 안 잡힙니다."}
+        ];
+
+        // 탭 전환 로직
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId + '-tab').classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '학생 명함 갤러리' : '전체 수합 데이터';
+        }
+
+        // 데이터 가져오기 (GET)
+        function fetchData() {
+            const loading = document.getElementById('loading');
+            const gallery = document.getElementById('galleryContainer');
+            const table = document.getElementById('tableBody');
+            
+            if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
+                console.warn('웹앱 URL이 설정되지 않아 더미 데이터를 표시합니다.');
+                globalData = dummyData;
+                renderAll();
+                return;
+            }
+
+            loading.style.display = 'block';
+            gallery.innerHTML = '';
+            table.innerHTML = '';
+
+            fetch(WEB_APP_URL)
+                .then(res => res.json())
+                .then(data => {
+                    globalData = data;
+                    loading.style.display = 'none';
+                    renderAll();
+                })
+                .catch(err => {
+                    console.error(err);
+                    loading.innerHTML = '데이터를 불러오는 데 실패했습니다. URL을 확인해주세요.';
+                });
+        }
+
+        // 렌더링 (필터 적용)
+        function renderAll() {
+            const dateFilter = document.getElementById('filterDate').value;
+            const trackFilter = document.getElementById('filterTrack').value;
+            
+            // 필터링
+            const filteredData = globalData.filter(row => {
+                // 구글 시트 항목명이 다를 수 있으므로 포함(includes)으로 유연하게 체크
+                const d = row['참여 희망 날짜'] || '';
+                const t = row['지원 계열'] || row['계열'] || '';
+                
+                let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
+                let trackMatch = (trackFilter === 'all') || t.includes(trackFilter);
+                
+                return dateMatch && trackMatch;
+            });
+
+            renderGallery(filteredData);
+            renderTable(filteredData);
+        }
+
+        // 1. 명함 갤러리 렌더링
+        function renderGallery(data) {
+            const container = document.getElementById('galleryContainer');
+            container.innerHTML = '';
+            
+            if(data.length === 0) {
+                container.innerHTML = '<div style="padding:20px;">조건에 맞는 학생이 없습니다.</div>';
+                return;
+            }
+
+            data.forEach((student, index) => {
+                const name = student['이름'] || '이름없음';
+                const id = student['학번'] || '-';
+                const univ = student['대학'] || '';
+                const type = student['전형'] || '';
+                const dept = student['학과'] || '';
+                const date = student['참여 희망 날짜'] || '';
+                const track = student['지원 계열'] || student['계열'] || '';
+                
+                // 계열별 태그 추출 (괄호 앞부분만)
+                const shortTrack = track.split('(')[0].trim();
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                // 클릭 시 모달 열기 (전체 데이터 객체를 넘김)
+                card.onclick = () => openModal(student);
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-name">${name}</span>
+                        <span class="card-id">${id}</span>
+                    </div>
+                    <div class="card-tag">${shortTrack}</div>
+                    <div class="card-target">🏫 ${univ} ${type}</div>
+                    <div style="font-size: 13px; color: #555;">${dept}</div>
+                    <div style="margin-top: 15px; font-size: 12px; font-weight: bold; color: #e15f41;">🗓️ ${date} 배정</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 2. 테이블 렌더링
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            data.forEach(student => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${student['참여 희망 날짜'] || '-'}</b></td>
+                    <td>${student['학번'] || '-'}</td>
+                    <td><b>${student['이름'] || '-'}</b></td>
+                    <td>${(student['지원 계열'] || student['계열'] || '').split('(')[0]}</td>
+                    <td>${student['대학'] || ''} / ${student['전형'] || ''} / ${student['학과'] || ''}</td>
+                    <td>${student['면접 진행 방식'] || '-'}</td>
+                    <td>${student['실제 면접일'] || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 모달 열기/닫기 로직
+        function openModal(student) {
+            document.getElementById('m-name').innerText = (student['학번'] || '') + ' ' + (student['이름'] || '');
+            document.getElementById('m-info').innerText = `📞 ${student['전화번호'] || '-'}`;
+            document.getElementById('m-date').innerText = `📌 ${student['참여 희망 날짜'] || '-'}`;
+            document.getElementById('m-target').innerText = `🏫 ${student['대학'] || ''} | ${student['전형'] || ''} | ${student['학과'] || ''}`;
+            
+            let scheduleText = `✅ 진행 방식: ${student['면접 진행 방식'] || '-'}<br>`;
+            if(student['1차 합격 발표일'] && student['1차 합격 발표일'] !== '해당없음') {
+                scheduleText += `🎯 1차 발표: ${student['1차 합격 발표일']}<br>`;
+            }
+            scheduleText += `🚨 실제 면접: ${student['실제 면접일'] || '-'}`;
+            
+            document.getElementById('m-schedule').innerHTML = scheduleText;
+            document.getElementById('m-concern').innerText = student['솔직한 고민'] || '입력된 내용이 없습니다.';
+
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if(e.target === this) closeModal();
+        });
+
+        // 초기 실행
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
