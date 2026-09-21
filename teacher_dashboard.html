@@ -31,7 +31,7 @@
 
         /* 사이드바 영역 */
         .sidebar {
-            width: 250px;
+            width: 280px;
             padding: 25px 15px;
             display: flex;
             flex-direction: column;
@@ -54,7 +54,7 @@
             border: 1px solid rgba(255, 255, 255, 0.6);
             padding: 15px;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             color: #34495e;
             cursor: pointer;
@@ -101,11 +101,15 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .filter-group {
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-group select {
@@ -115,15 +119,50 @@
             background: rgba(255,255,255,0.5);
             font-weight: bold;
             outline: none;
+            height: 40px;
         }
 
-        /* 명함 갤러리 뷰 */
+        /* 복수 선택 가능한 버튼(Pill) 필터 스타일 */
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-pill:hover {
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .filter-pill.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 명함 갤러리 뷰 (잘림 현상 방지를 위해 여백 추가) */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
             overflow-y: auto;
+            /* 위아래 패딩을 주어 hover 시 카드가 잘리지 않도록 함 */
+            padding-top: 15px;
+            padding-bottom: 25px; 
             padding-right: 10px;
+            padding-left: 5px;
         }
 
         .card {
@@ -134,13 +173,12 @@
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.7);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.75);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
         }
 
         .card-header {
@@ -275,37 +313,41 @@
 
     <div class="sidebar glass-panel">
         <h2>🎯 면접 대비반 관리</h2>
-        <button class="tab-btn active" onclick="switchTab('gallery')">📇 명함 갤러리 뷰</button>
+        <button class="tab-btn active" onclick="switchTab('gallery')">📇 참여 학생 정보 카드</button>
         <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
         <button class="tab-btn" onclick="fetchData()" style="margin-top: auto; background: rgba(255,255,255,0.2); border: 1px dashed #333; justify-content: center;">🔄 새로고침</button>
     </div>
 
     <div class="main-content glass-panel">
         <div class="header-section">
-            <h3 id="currentTabTitle" style="margin: 0; font-size: 22px;">학생 명함 갤러리</h3>
+            <h3 id="currentTabTitle" style="margin: 0; font-size: 22px;">면접 대비반 참여 학생 정보 카드</h3>
             <div class="filter-group">
                 <select id="filterDate" onchange="renderAll()">
-                    <option value="all">모든 날짜</option>
+                    <option value="all">🗓️ 모든 날짜</option>
                     <option value="10월 19일(월)">10월 19일(월)</option>
                     <option value="11월 25일(화)">11월 25일(화)</option>
                 </select>
-                <select id="filterTrack" onchange="renderAll()">
-                    <option value="all">모든 계열</option>
-                    <option value="자연">자연계열</option>
-                    <option value="인문">인문계열</option>
-                    <option value="교대+사범대">사범계열</option>
-                    <option value="의약학계열">의약학계열</option>
-                    <option value="예체">예체능</option>
-                </select>
+                
+                <!-- 복수 선택 가능한 계열 필터 버튼들 -->
+                <div class="filter-pills" id="trackFilters">
+                    <button class="filter-pill active" onclick="toggleTrack(this, 'all')">전체</button>
+                    <button class="filter-pill" onclick="toggleTrack(this, '자연')">자연</button>
+                    <button class="filter-pill" onclick="toggleTrack(this, '인문')">인문</button>
+                    <button class="filter-pill" onclick="toggleTrack(this, '교대+사범대')">사범</button>
+                    <button class="filter-pill" onclick="toggleTrack(this, '의약학')">의약학</button>
+                    <button class="filter-pill" onclick="toggleTrack(this, '예체')">예체능</button>
+                </div>
             </div>
         </div>
 
         <div id="loading" class="loading">데이터를 불러오는 중입니다... ⏳</div>
 
+        <!-- 탭 1: 학생 정보 카드(갤러리) 뷰 -->
         <div id="gallery-tab" class="tab-content active">
             <div class="gallery-grid" id="galleryContainer"></div>
         </div>
 
+        <!-- 탭 2: 테이블 뷰 -->
         <div id="table-tab" class="tab-content">
             <div class="table-container">
                 <table>
@@ -316,7 +358,7 @@
                             <th>이름</th>
                             <th>계열</th>
                             <th>목표 대학/전형/학과</th>
-                            <th>진행 방식</th>
+                            <th>1차 합격 진행 여부 파악</th>
                             <th>실제 면접일</th>
                         </tr>
                     </thead>
@@ -334,7 +376,7 @@
             <div class="modal-item"><span>학번 / 전화번호</span><div id="m-info"></div></div>
             <div class="modal-item"><span>모의면접 희망 날짜</span><div id="m-date"></div></div>
             <div class="modal-item"><span>목표 전형 정보</span><div id="m-target"></div></div>
-            <div class="modal-item"><span>면접 진행 방식 / 1차 합격일 / 실제 면접일</span><div id="m-schedule"></div></div>
+            <div class="modal-item"><span>1차 합격 진행 여부 파악 / 1차 발표일 / 실제 면접일</span><div id="m-schedule"></div></div>
             <div class="modal-item"><span>💬 솔직한 고민</span><div id="m-concern" style="background: rgba(255,234,167,0.4); min-height: 60px;"></div></div>
         </div>
     </div>
@@ -344,6 +386,7 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
         
         let globalData = []; 
+        let selectedTracks = new Set(['all']); // 복수 선택된 계열을 저장하는 집합
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -352,7 +395,35 @@
             document.getElementById(tabId + '-tab').classList.add('active');
             event.currentTarget.classList.add('active');
             
-            document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '학생 명함 갤러리' : '전체 수합 데이터';
+            document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '면접 대비반 참여 학생 정보 카드' : '전체 수합 데이터';
+        }
+
+        // 복수 선택 필터 토글 함수
+        function toggleTrack(btnElement, trackVal) {
+            if (trackVal === 'all') {
+                selectedTracks.clear();
+                selectedTracks.add('all');
+                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                btnElement.classList.add('active');
+            } else {
+                selectedTracks.delete('all');
+                document.querySelector('.filter-pill[onclick*="all"]').classList.remove('active');
+                
+                if (selectedTracks.has(trackVal)) {
+                    selectedTracks.delete(trackVal);
+                    btnElement.classList.remove('active');
+                } else {
+                    selectedTracks.add(trackVal);
+                    btnElement.classList.add('active');
+                }
+                
+                // 모두 해제되면 다시 '전체' 활성화
+                if (selectedTracks.size === 0) {
+                    selectedTracks.add('all');
+                    document.querySelector('.filter-pill[onclick*="all"]').classList.add('active');
+                }
+            }
+            renderAll();
         }
 
         function fetchData() {
@@ -377,15 +448,13 @@
                 });
         }
 
-        // 특정 키워드가 포함된 열(Column)의 데이터를 유연하게 찾는 헬퍼 함수
         function getFlexibleValue(student, keyword, defaultVal = '') {
             const foundKey = Object.keys(student).find(k => k.includes(keyword));
             return foundKey ? student[foundKey] : defaultVal;
         }
 
         function formatToDateOnly(dateString) {
-            if (!dateString || dateString === '해당없음' || dateString === '-') return dateString;
-            // "2026-10-26T15:00:00.000Z" 형식이면 T 앞의 날짜만 추출
+            if (!dateString || dateString === '해당없음' || dateString === '-' || dateString === '미입력') return dateString;
             if (dateString.includes('T')) {
                 return dateString.split('T')[0];
             }
@@ -394,14 +463,24 @@
 
         function renderAll() {
             const dateFilter = document.getElementById('filterDate').value;
-            const trackFilter = document.getElementById('filterTrack').value;
             
             const filteredData = globalData.filter(row => {
                 const d = getFlexibleValue(row, '날짜');
                 const t = getFlexibleValue(row, '계열');
                 
+                // 날짜 필터 확인
                 let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
-                let trackMatch = (trackFilter === 'all') || t.includes(trackFilter);
+                
+                // 계열 필터 확인 (복수 선택 처리)
+                let trackMatch = selectedTracks.has('all');
+                if (!trackMatch) {
+                    for (let selected of selectedTracks) {
+                        if (t.includes(selected)) {
+                            trackMatch = true;
+                            break;
+                        }
+                    }
+                }
                 
                 return dateMatch && trackMatch;
             });
@@ -456,7 +535,7 @@
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
                 
-                const method = getFlexibleValue(student, '진행 여부', getFlexibleValue(student, '방식', '-'));
+                const method = getFlexibleValue(student, '진행 여부', getFlexibleValue(student, '방식', '미입력'));
                 const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
 
                 const tr = document.createElement('tr');
@@ -480,16 +559,17 @@
             document.getElementById('m-target').innerText = `🏫 ${getFlexibleValue(student, '대학')} | ${getFlexibleValue(student, '전형')} | ${getFlexibleValue(student, '학과')}`;
             
             // 키워드로 유연하게 값 추출
-            const method = getFlexibleValue(student, '진행 여부 파악', getFlexibleValue(student, '방식', '-'));
+            const method = getFlexibleValue(student, '진행 여부 파악', getFlexibleValue(student, '진행 여부', getFlexibleValue(student, '방식', '미입력')));
             const passDate = formatToDateOnly(getFlexibleValue(student, '1차 합격', '해당없음'));
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
 
-            let scheduleText = `✅ 진행 방식: ${method}<br>`;
-            if(passDate && passDate !== '해당없음' && passDate !== '-') {
-                scheduleText += `🎯 1차 발표: ${passDate}<br>`;
+            // 팝업창 내 진행 여부 파악 라벨 수정
+            let scheduleText = `✅ 1차 합격 진행 여부 파악: <b>${method}</b><br>`;
+            if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') {
+                scheduleText += `🎯 1차 발표일: ${passDate}<br>`;
             }
-            scheduleText += `🚨 실제 면접: ${actualDate}`;
+            scheduleText += `🚨 실제 면접일: ${actualDate}`;
             
             document.getElementById('m-schedule').innerHTML = scheduleText;
             document.getElementById('m-concern').innerText = concern;
