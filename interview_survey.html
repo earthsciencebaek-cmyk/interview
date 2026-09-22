@@ -192,7 +192,8 @@
 
             <div class="form-group">
                 <label for="phone">📱 전화번호</label>
-                <input type="tel" id="phone" required placeholder="010-0000-0000" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}">
+                <!-- 하이픈 자동 입력 기능이 적용된 tel 필드 -->
+                <input type="tel" id="phone" required placeholder="010-0000-0000" maxlength="13">
             </div>
 
             <div class="form-group">
@@ -260,6 +261,18 @@
         // ★ GAS 웹앱 URL 입력 ★
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
 
+        // 전화번호 입력 시 자동으로 하이픈(-) 추가해주는 기능
+        const phoneInput = document.getElementById('phone');
+        phoneInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 남기기
+            if (value.length > 3 && value.length <= 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length > 7) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+            }
+            e.target.value = value;
+        });
+
         // '1차 합격 후 진행' 선택 시 날짜 입력창 보이기/숨기기 로직
         const radio1 = document.getElementById('type1');
         const radio2 = document.getElementById('type2');
@@ -292,17 +305,12 @@
             
             const confirmMessage = `입력하신 정보가 맞는지 확인해주세요.
 
-` + 
-                                   `▶ 학번: ${studentId}
-` + 
-                                   `▶ 이름: ${studentName}
-` + 
-                                   `▶ 전화번호: ${phone}
-` + 
-                                   `▶ 참여 희망 날짜: ${participationDate}
+▶ 학번: ${studentId}
+▶ 이름: ${studentName}
+▶ 전화번호: ${phone}
+▶ 참여 희망 날짜: ${participationDate}
 
-` + 
-                                   `맞으면 [확인], 수정하려면 [취소]를 눌러주세요.`;
+맞으면 [확인], 수정하려면 [취소]를 눌러주세요.`;
             
             // 사용자가 '취소'를 누르면 제출 중단
             if (!confirm(confirmMessage)) {
