@@ -123,7 +123,7 @@
         // ========================================================
         // ★★★ 여기에 구글 시트에서 복사한 웹앱 URL을 붙여넣으세요! ★★★
         // ========================================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzt-dIQ4wdavr3YRlclv_a_wu2f2_XGpXslRohaPZGjSO7P4mSUT-4wGWdW0U-cICg/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxw9ldQQmTD0jbapx6sCM3u5hXRmDIEx4nAhYH1t7NkwfZEzkl_FRa1sc38aCD4BeQ/exec';
         
         let globalData = []; 
         let selectedTracks = new Set(['all']);
@@ -273,6 +273,7 @@
                 
                 const studentId = getFlexibleValue(student, '학번', '');
                 const studentName = getFlexibleValue(student, '이름', '');
+                const timestamp = getFlexibleValue(student, '타임스탬프', '');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -283,21 +284,32 @@
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${method}</td>
                     <td>${actualDate}</td>
-                    <td><button class="delete-btn" onclick="deleteData('${studentId}', '${studentName}')">삭제</button></td>
+                    <td><button class="delete-btn" onclick="deleteData('${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // ★ 강력해진 삭제 로직 (학번 + 이름 전송 및 에러 메시지 팝업)
-        async function deleteData(studentId, studentName) {
-            if (!studentId || !studentName) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
-            if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
+        // ★ 강력해진 삭제 로직 (빈 데이터도 타임스탬프로 삭제 가능)
+        async function deleteData(studentId, studentName, timestamp) {
+            if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 완전히 누락)'); return; }
+            
+            const confirmMsg = (studentId || studentName) ? 
+                `[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?` : 
+                `이름 없는 빈 데이터를 정말 삭제하시겠습니까?`;
+
+            if (!confirm(confirmMsg)) return;
 
             // 화면에서 즉시 삭제
             globalData = globalData.filter(row => {
                 const id = getFlexibleValue(row, '학번', '').toString();
                 const name = getFlexibleValue(row, '이름', '').toString();
+                const time = getFlexibleValue(row, '타임스탬프', '').toString();
+                
+                // 이름과 학번이 없는 경우 타임스탬프로만 비교
+                if (!studentId && !studentName) {
+                    return time !== timestamp.toString();
+                }
                 return !(id === studentId.toString() && name === studentName.toString());
             });
             renderAll(); 
@@ -308,11 +320,10 @@
                 const res = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName })
+                    body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName, timestamp: timestamp })
                 });
                 const result = await res.json();
                 
-                // 삭제 실패 시 명확한 에러 메시지 노출
                 if (result.result !== 'success') {
                     alert('시트 삭제 실패: ' + result.reason + '\n새로고침(동기화)하면 데이터가 다시 나타납니다. GAS 새 버전 배포를 확인해주세요.');
                 }
