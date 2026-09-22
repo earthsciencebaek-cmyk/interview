@@ -5,363 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>면접 대비반 교사용 대시보드</title>
     <style>
-        /* 글래스모피즘 기본 테마 */
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column; 
-            gap: 20px;
-            color: #2c3e50;
-        }
-
-        /* 글래스모피즘 패널 공통 스타일 */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.35);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-        }
-
-        /* 상단 네비게이션 영역 */
-        .top-nav {
-            display: flex;
-            align-items: center;
-            padding: 15px 25px;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .top-nav h2 {
-            margin: 0;
-            padding-right: 20px;
-            border-right: 2px solid rgba(255, 255, 255, 0.5);
-            font-size: 22px;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        }
-
-        .tab-btn {
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: bold;
-            color: #34495e;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.6);
-            transform: translateY(-2px);
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
-            color: white;
-            border: none;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .ml-auto {
-            margin-left: auto;
-        }
-
-        /* 메인 콘텐츠 영역 */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .tab-content {
-            display: none;
-            height: 100%;
-            flex-direction: column;
-        }
-
-        .tab-content.active {
-            display: flex;
-        }
-
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .title-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-group select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.6);
-            background: rgba(255,255,255,0.5);
-            font-weight: bold;
-            outline: none;
-            height: 40px;
-        }
-
-        .filter-pills {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .filter-pill {
-            padding: 8px 14px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #2c3e50;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-pill:hover {
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .filter-pill.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-        }
-
-        /* 갤러리 그리드 */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            overflow-y: auto;
-            padding-top: 15px;
-            padding-bottom: 25px; 
-            padding-right: 10px;
-            padding-left: 5px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.45);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 16px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            background: rgba(255, 255, 255, 0.75);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px dashed rgba(0,0,0,0.2);
-            padding-bottom: 10px;
-        }
-
-        .card-name {
-            font-size: 20px;
-            font-weight: 900;
-        }
-
-        .card-id {
-            background: rgba(102, 126, 234, 0.2);
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .card-tag {
-            display: inline-block;
-            background: rgba(255, 154, 158, 0.3);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .card-target {
-            font-size: 15px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        /* 테이블 뷰 */
-        .table-container {
-            overflow: auto;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 15px;
-            padding: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            white-space: nowrap;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.5);
-        }
-
-        th {
-            background: rgba(255, 255, 255, 0.5);
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            backdrop-filter: blur(5px);
-        }
-
-        tbody tr:hover {
-            background: rgba(255, 255, 255, 0.6);
-        }
-
-        /* 삭제 버튼 스타일 */
-        .delete-btn {
-            background-color: #ff7675;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .delete-btn:hover {
-            background-color: #d63031;
-        }
-
-        /* 팝업 모달 */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal-content {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            position: relative;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px; right: 20px;
-            background: rgba(255,0,0,0.1);
-            border: none;
-            border-radius: 50%;
-            width: 30px; height: 30px;
-            font-weight: bold;
-            color: #d63031;
-            cursor: pointer;
-        }
-
+        body { font-family: 'Noto Sans KR', sans-serif; background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); background-attachment: fixed; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; color: #2c3e50; }
+        .glass-panel { background: rgba(255, 255, 255, 0.35); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); }
+        .top-nav { display: flex; align-items: center; padding: 15px 25px; gap: 15px; flex-wrap: wrap; }
+        .top-nav h2 { margin: 0; padding-right: 20px; border-right: 2px solid rgba(255, 255, 255, 0.5); font-size: 22px; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
+        .tab-btn { background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.6); padding: 10px 20px; border-radius: 12px; font-size: 15px; font-weight: bold; color: #34495e; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { background: rgba(255, 255, 255, 0.6); transform: translateY(-2px); }
+        .tab-btn.active { background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8)); color: white; border: none; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .ml-auto { margin-left: auto; }
+        .main-content { flex-grow: 1; padding: 30px; display: flex; flex-direction: column; overflow: hidden; }
+        .tab-content { display: none; height: 100%; flex-direction: column; }
+        .tab-content.active { display: flex; }
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .title-container { display: flex; align-items: center; gap: 10px; }
+        .filter-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .filter-group select { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.5); font-weight: bold; outline: none; height: 40px; }
+        .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-pill { padding: 8px 14px; background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 20px; font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer; transition: all 0.2s ease; }
+        .filter-pill:hover { background: rgba(255, 255, 255, 0.7); }
+        .filter-pill.active { background: #667eea; color: white; border-color: #667eea; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; overflow-y: auto; padding-top: 15px; padding-bottom: 25px; padding-right: 10px; padding-left: 5px; }
+        .card { background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .card:hover { transform: translateY(-8px); background: rgba(255, 255, 255, 0.75); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 10px; }
+        .card-name { font-size: 20px; font-weight: 900; }
+        .card-id { background: rgba(102, 126, 234, 0.2); padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: bold; }
+        .card-tag { display: inline-block; background: rgba(255, 154, 158, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .card-target { font-size: 15px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+        .table-container { overflow: auto; background: rgba(255, 255, 255, 0.4); border-radius: 15px; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.5); }
+        th { background: rgba(255, 255, 255, 0.5); font-weight: bold; position: sticky; top: 0; backdrop-filter: blur(5px); }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.6); }
+        .delete-btn { background-color: #ff7675; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        .delete-btn:hover { background-color: #d63031; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-radius: 20px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; }
+        .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,0,0,0.1); border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; color: #d63031; cursor: pointer; }
         .modal-item { margin-bottom: 15px; }
         .modal-item span { display: block; font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 4px; }
         .modal-item div { font-size: 16px; font-weight: 500; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; }
-
-        .loading {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 50px;
-            display: none;
-        }
-
-        @media screen and (max-width: 768px) {
-            .top-nav { justify-content: center; padding: 15px; }
-            .top-nav h2 { width: 100%; text-align: center; border-right: none; padding-right: 0; margin-bottom: 10px; }
-            .ml-auto { margin-left: 0; width: 100%; justify-content: center; }
-            .tab-btn { flex: 1; justify-content: center; }
-            .main-content { padding: 15px; }
-        }
+        .loading { text-align: center; font-size: 18px; font-weight: bold; padding: 50px; display: none; }
+        @media screen and (max-width: 768px) { .top-nav { justify-content: center; padding: 15px; } .top-nav h2 { width: 100%; text-align: center; border-right: none; padding-right: 0; margin-bottom: 10px; } .ml-auto { margin-left: 0; width: 100%; justify-content: center; } .tab-btn { flex: 1; justify-content: center; } .main-content { padding: 15px; } }
     </style>
 </head>
 <body>
-
     <div class="top-nav glass-panel">
         <h2>🎯 면접 대비반 관리</h2>
         <button class="tab-btn active" onclick="switchTab('gallery')">📇 참여 학생 정보 카드</button>
         <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
         <button class="tab-btn ml-auto" onclick="fetchData()" style="background: rgba(255,255,255,0.2); border: 1px dashed #333;">🔄 서버 동기화</button>
     </div>
-
     <div class="main-content glass-panel">
         <div class="header-section">
             <div class="title-container">
                 <h3 id="currentTabTitle" style="margin: 0; font-size: 22px;">면접 대비반 참여 학생 정보 카드</h3>
                 <h3 id="studentCount" style="margin: 0; font-size: 22px; color: #e15f41;">(총 0명)</h3>
             </div>
-            
             <div class="filter-group">
                 <select id="filterDate" onchange="renderAll()">
                     <option value="all">🗓️ 모든 날짜</option>
                     <option value="10월 19일(월)">10월 19일(월)</option>
                     <option value="11월 25일(화)">11월 25일(화)</option>
                 </select>
-
-                <!-- 동적으로 생성될 학급 필터 -->
                 <select id="filterClass" onchange="renderAll()">
                     <option value="all">🏫 모든 학급</option>
                 </select>
-                
-                <!-- 추가된 정렬 및 초기화 버튼 -->
                 <button class="filter-pill" id="sortBtn" onclick="toggleSort()" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;">🔃 학번 정렬</button>
                 <button class="filter-pill" onclick="resetFilters()" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c;">🔄 필터 초기화</button>
-
                 <div class="filter-pills" id="trackFilters" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 10px;">
                     <button class="filter-pill active" onclick="toggleTrack(this, 'all')">전체</button>
                     <button class="filter-pill" onclick="toggleTrack(this, '자연')">자연</button>
@@ -372,13 +83,10 @@
                 </div>
             </div>
         </div>
-
         <div id="loading" class="loading">데이터를 불러오는 중입니다... ⏳</div>
-
         <div id="gallery-tab" class="tab-content active">
             <div class="gallery-grid" id="galleryContainer"></div>
         </div>
-
         <div id="table-tab" class="tab-content">
             <div class="table-container">
                 <table>
@@ -391,7 +99,7 @@
                             <th>목표 대학/전형/학과</th>
                             <th>1차 합격 진행 여부 파악</th>
                             <th>실제 면접일</th>
-                            <th>관리</th> <!-- 삭제 열 추가 -->
+                            <th>관리</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -399,8 +107,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 팝업 모달 -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">X</button>
@@ -414,115 +120,69 @@
     </div>
 
     <script>
-        // ========================================================
-        // ★★★ 여기에 구글 시트에서 복사한 웹앱 URL을 붙여넣으세요! ★★★
-        // ========================================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxS26sVkN58045kR59Lsgaj-KHid6slxMUd3n36kQ43znntq6oQJz9SNyYk597xIYc/exec';
+        // ★★★ 구글 앱스 스크립트 웹앱 주소 입력 ★★★
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzt-dIQ4wdavr3YRlclv_a_wu2f2_XGpXslRohaPZGjSO7P4mSUT-4wGWdW0U-cICg/exec';
         
         let globalData = []; 
         let selectedTracks = new Set(['all']);
-        let isSortedAsc = false; // 정렬 상태 추적 변수
+        let isSortedAsc = false;
 
-        // 탭 전환
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
             document.getElementById(tabId + '-tab').classList.add('active');
             event.currentTarget.classList.add('active');
-            
             document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '면접 대비반 참여 학생 정보 카드' : '전체 수합 데이터';
         }
 
-        // 복수 선택 계열 필터
         function toggleTrack(btnElement, trackVal) {
             if (trackVal === 'all') {
-                selectedTracks.clear();
-                selectedTracks.add('all');
+                selectedTracks.clear(); selectedTracks.add('all');
                 document.querySelectorAll('#trackFilters .filter-pill').forEach(p => p.classList.remove('active'));
                 btnElement.classList.add('active');
             } else {
                 selectedTracks.delete('all');
                 document.querySelector('#trackFilters .filter-pill[onclick*="all"]').classList.remove('active');
-                
-                if (selectedTracks.has(trackVal)) {
-                    selectedTracks.delete(trackVal);
-                    btnElement.classList.remove('active');
-                } else {
-                    selectedTracks.add(trackVal);
-                    btnElement.classList.add('active');
-                }
-                
-                if (selectedTracks.size === 0) {
-                    selectedTracks.add('all');
-                    document.querySelector('#trackFilters .filter-pill[onclick*="all"]').classList.add('active');
-                }
+                if (selectedTracks.has(trackVal)) { selectedTracks.delete(trackVal); btnElement.classList.remove('active'); } 
+                else { selectedTracks.add(trackVal); btnElement.classList.add('active'); }
+                if (selectedTracks.size === 0) { selectedTracks.add('all'); document.querySelector('#trackFilters .filter-pill[onclick*="all"]').classList.add('active'); }
             }
             renderAll();
         }
 
-        // 필터 모두 초기화 기능
         function resetFilters() {
             document.getElementById('filterDate').value = 'all';
             document.getElementById('filterClass').value = 'all';
-            
-            // 계열 토글 '전체'로 초기화
             toggleTrack(document.querySelector('#trackFilters .filter-pill[onclick*="all"]'), 'all');
-            // 토글 함수 내부에서 renderAll()이 실행됨
         }
 
-        // 정렬 기능 (학번 오름차순)
         function toggleSort() {
             isSortedAsc = !isSortedAsc;
             const sortBtn = document.getElementById('sortBtn');
-            if(isSortedAsc) {
-                sortBtn.innerText = '🔽 학번순 (켜짐)';
-                sortBtn.style.background = '#2ecc71';
-                sortBtn.style.color = 'white';
-            } else {
-                sortBtn.innerText = '🔃 학번 정렬';
-                sortBtn.style.background = 'rgba(46, 204, 113, 0.2)';
-                sortBtn.style.color = '#2c3e50';
-            }
+            if(isSortedAsc) { sortBtn.innerText = '🔽 학번순 (켜짐)'; sortBtn.style.background = '#2ecc71'; sortBtn.style.color = 'white'; } 
+            else { sortBtn.innerText = '🔃 학번 정렬'; sortBtn.style.background = 'rgba(46, 204, 113, 0.2)'; sortBtn.style.color = '#2c3e50'; }
             renderAll();
         }
 
-        // 학급 필터 자동 생성 (학번 앞 3자리 기준)
         function populateClassFilter() {
             const classFilter = document.getElementById('filterClass');
             const classes = new Set();
-            
             globalData.forEach(row => {
                 const id = getFlexibleValue(row, '학번', '');
-                if (id && id.toString().length >= 3) {
-                    classes.add(id.toString().substring(0, 3)); // 305 추출
-                }
+                if (id && id.toString().length >= 3) classes.add(id.toString().substring(0, 3));
             });
-            
             const sortedClasses = Array.from(classes).sort();
             classFilter.innerHTML = '<option value="all">🏫 모든 학급</option>';
-            
-            sortedClasses.forEach(cls => {
-                classFilter.innerHTML += `<option value="${cls}">${cls}반</option>`;
-            });
+            sortedClasses.forEach(cls => classFilter.innerHTML += `<option value="${cls}">${cls}반</option>`);
         }
 
         function fetchData() {
             const loading = document.getElementById('loading');
             loading.style.display = 'block';
-
             fetch(WEB_APP_URL)
                 .then(res => res.json())
-                .then(data => {
-                    globalData = data;
-                    populateClassFilter(); // 데이터 불러온 후 학급 드롭다운 생성
-                    loading.style.display = 'none';
-                    renderAll();
-                })
-                .catch(err => {
-                    console.error(err);
-                    loading.innerHTML = '데이터를 불러오는 데 실패했습니다. URL을 확인해주세요.';
-                });
+                .then(data => { globalData = data; populateClassFilter(); loading.style.display = 'none'; renderAll(); })
+                .catch(err => { console.error(err); loading.innerHTML = '데이터를 불러오는 데 실패했습니다.'; });
         }
 
         function getFlexibleValue(student, keyword, defaultVal = '') {
@@ -533,13 +193,9 @@
         function getMethodValue(student) {
             const keys = Object.keys(student);
             let rawValue = '미입력';
-            
             for (let k of keys) {
                 if ((k.includes('진행') || k.includes('방식') || k.includes('여부')) && !k.includes('실제')) {
-                    if (student[k] && student[k] !== '') {
-                        rawValue = student[k];
-                        break;
-                    }
+                    if (student[k] && student[k] !== '') { rawValue = student[k]; break; }
                 }
             }
             if (rawValue === '미입력') return rawValue;
@@ -550,50 +206,30 @@
 
         function formatToDateOnly(dateString) {
             if (!dateString || dateString === '해당없음' || dateString === '-' || dateString === '미입력') return dateString;
-            if (dateString.toString().includes('T')) {
-                return dateString.toString().split('T')[0];
-            }
+            if (dateString.toString().includes('T')) return dateString.toString().split('T')[0];
             return dateString;
         }
 
-        // 전체 렌더링
         function renderAll() {
             const dateFilter = document.getElementById('filterDate').value;
             const classFilter = document.getElementById('filterClass').value;
-            
             let filteredData = globalData.filter(row => {
                 const d = getFlexibleValue(row, '날짜');
                 const t = getFlexibleValue(row, '계열');
                 const id = getFlexibleValue(row, '학번', '').toString();
-                
-                // 날짜, 학급, 계열 필터 동시 검사
                 let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
                 let classMatch = (classFilter === 'all') || id.startsWith(classFilter);
-                
                 let trackMatch = selectedTracks.has('all');
-                if (!trackMatch) {
-                    for (let selected of selectedTracks) {
-                        if (t.includes(selected)) {
-                            trackMatch = true; break;
-                        }
-                    }
-                }
-                
+                if (!trackMatch) { for (let selected of selectedTracks) { if (t.includes(selected)) { trackMatch = true; break; } } }
                 return dateMatch && classMatch && trackMatch;
             });
-
-            // 정렬 적용 (켜져 있을 경우 학번 오름차순)
             if (isSortedAsc) {
                 filteredData.sort((a, b) => {
-                    const idA = getFlexibleValue(a, '학번', '').toString();
-                    const idB = getFlexibleValue(b, '학번', '').toString();
-                    return idA.localeCompare(idB);
+                    return getFlexibleValue(a, '학번', '').toString().localeCompare(getFlexibleValue(b, '학번', '').toString());
                 });
             }
-
             const countElement = document.getElementById('studentCount');
             if(countElement) countElement.innerText = `(총 ${filteredData.length}명)`;
-
             renderGallery(filteredData);
             renderTable(filteredData);
         }
@@ -601,12 +237,7 @@
         function renderGallery(data) {
             const container = document.getElementById('galleryContainer');
             container.innerHTML = '';
-            
-            if(data.length === 0) {
-                container.innerHTML = '<div style="padding:20px;">조건에 맞는 학생이 없습니다.</div>';
-                return;
-            }
-
+            if(data.length === 0) { container.innerHTML = '<div style="padding:20px;">조건에 맞는 학생이 없습니다.</div>'; return; }
             data.forEach((student) => {
                 const name = getFlexibleValue(student, '이름', '이름없음');
                 const id = getFlexibleValue(student, '학번', '-');
@@ -616,21 +247,15 @@
                 const date = getFlexibleValue(student, '날짜');
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
-
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.onclick = () => openModal(student);
-
                 card.innerHTML = `
-                    <div class="card-header">
-                        <span class="card-name">${name}</span>
-                        <span class="card-id">${id}</span>
-                    </div>
+                    <div class="card-header"><span class="card-name">${name}</span><span class="card-id">${id}</span></div>
                     <div class="card-tag">${shortTrack}</div>
                     <div class="card-target">🏫 ${univ} ${type}</div>
                     <div style="font-size: 13px; color: #555;">${dept}</div>
-                    <div style="margin-top: 15px; font-size: 12px; font-weight: bold; color: #e15f41;">🗓️ ${date} 배정</div>
-                `;
+                    <div style="margin-top: 15px; font-size: 12px; font-weight: bold; color: #e15f41;">🗓️ ${date} 배정</div>`;
                 container.appendChild(card);
             });
         }
@@ -638,55 +263,53 @@
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-
             data.forEach(student => {
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
                 const method = getMethodValue(student);
                 const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
                 
-                // 삭제 기능용 고유 타임스탬프
-                const timestamp = getFlexibleValue(student, '타임스탬프', '');
+                // 삭제 버튼에 학번과 이름 할당
+                const studentId = getFlexibleValue(student, '학번', '');
+                const studentName = getFlexibleValue(student, '이름', '');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>${getFlexibleValue(student, '날짜', '-')}</b></td>
-                    <td>${getFlexibleValue(student, '학번', '-')}</td>
-                    <td><b>${getFlexibleValue(student, '이름', '-')}</b></td>
+                    <td>${studentId}</td>
+                    <td><b>${studentName}</b></td>
                     <td>${shortTrack}</td>
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${method}</td>
                     <td>${actualDate}</td>
-                    <td><button class="delete-btn" onclick="deleteData('${timestamp}')">삭제</button></td>
+                    <td><button class="delete-btn" onclick="deleteData('${studentId}', '${studentName}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 데이터 삭제 함수 (서버 통신)
-        async function deleteData(timestamp) {
-            if (!timestamp) {
-                alert('삭제할 수 없는 데이터입니다 (타임스탬프 누락).');
-                return;
-            }
-            if (!confirm('이 학생의 데이터를 정말 삭제하시겠습니까? (삭제 시 복구 불가)')) return;
+        // 학번 + 이름 기반 삭제 로직
+        async function deleteData(studentId, studentName) {
+            if (!studentId || !studentName) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
+            if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
 
-            // 1. 화면에서 먼저 즉시 삭제하여 반응성 확보
-            globalData = globalData.filter(row => getFlexibleValue(row, '타임스탬프', '').toString() !== timestamp.toString());
+            // 화면에서 즉시 삭제
+            globalData = globalData.filter(row => {
+                const id = getFlexibleValue(row, '학번', '').toString();
+                const name = getFlexibleValue(row, '이름', '').toString();
+                return !(id === studentId.toString() && name === studentName.toString());
+            });
             renderAll(); 
 
-            // 2. 구글 시트로 삭제 요청 전송
             if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') return;
 
             try {
                 await fetch(WEB_APP_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete', timestamp: timestamp })
+                    body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName })
                 });
-            } catch (error) {
-                console.error('데이터 삭제 실패:', error);
-            }
+            } catch (error) { console.error('삭제 오류:', error); }
         }
 
         function openModal(student) {
@@ -694,32 +317,20 @@
             document.getElementById('m-info').innerText = `📞 ${getFlexibleValue(student, '전화번호', '-')}`;
             document.getElementById('m-date').innerText = `📌 ${getFlexibleValue(student, '날짜', '-')}`;
             document.getElementById('m-target').innerText = `🏫 ${getFlexibleValue(student, '대학')} | ${getFlexibleValue(student, '전형')} | ${getFlexibleValue(student, '학과')}`;
-            
             const method = getMethodValue(student);
             const passDate = formatToDateOnly(getFlexibleValue(student, '1차 합격', '해당없음'));
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
-
             let scheduleText = `✅ 1차 합격 진행 여부 파악: <b>${method}</b><br>`;
-            if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') {
-                scheduleText += `🎯 1차 발표일: ${passDate}<br>`;
-            }
+            if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { scheduleText += `🎯 1차 발표일: ${passDate}<br>`; }
             scheduleText += `🚨 실제 면접일: ${actualDate}`;
-            
             document.getElementById('m-schedule').innerHTML = scheduleText;
             document.getElementById('m-concern').innerText = concern;
-
             document.getElementById('detailModal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
-        }
-
-        document.getElementById('detailModal').addEventListener('click', function(e) {
-            if(e.target === this) closeModal();
-        });
-
+        function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+        document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target === this) closeModal(); });
         window.onload = fetchData;
     </script>
 </body>
