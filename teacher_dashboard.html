@@ -24,6 +24,11 @@
         .filter-pill { padding: 8px 14px; background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 20px; font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer; transition: all 0.2s ease; }
         .filter-pill:hover { background: rgba(255, 255, 255, 0.7); }
         .filter-pill.active { background: #667eea; color: white; border-color: #667eea; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4); }
+        
+        /* 이름 검색창 스타일 추가 */
+        .search-input { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.5); font-weight: bold; outline: none; height: 40px; box-sizing: border-box; transition: all 0.2s; }
+        .search-input:focus { background: rgba(255,255,255,0.8); border-color: #667eea; }
+
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; overflow-y: auto; padding-top: 15px; padding-bottom: 25px; padding-right: 10px; padding-left: 5px; }
         .card { background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.3s ease; position: relative; }
         .card:hover { transform: translateY(-8px); background: rgba(255, 255, 255, 0.75); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
@@ -73,6 +78,7 @@
                 </select>
                 <button class="filter-pill" id="sortBtn" onclick="toggleSort()" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;">🔃 학번 정렬</button>
                 <button class="filter-pill" onclick="resetFilters()" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c;">🔄 필터 초기화</button>
+                
                 <div class="filter-pills" id="trackFilters" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 10px;">
                     <button class="filter-pill active" onclick="toggleTrack(this, 'all')">전체</button>
                     <button class="filter-pill" onclick="toggleTrack(this, '자연')">자연</button>
@@ -80,6 +86,11 @@
                     <button class="filter-pill" onclick="toggleTrack(this, '교대+사범대')">사범</button>
                     <button class="filter-pill" onclick="toggleTrack(this, '의약학')">의약학</button>
                     <button class="filter-pill" onclick="toggleTrack(this, '예체')">예체능</button>
+                </div>
+
+                <!-- ★ 칸막이와 학생 이름 검색창 추가 ★ -->
+                <div style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 10px; display: flex; align-items: center;">
+                    <input type="text" id="searchName" class="search-input" placeholder="🔍 학생 이름 검색" onkeyup="renderAll()">
                 </div>
             </div>
         </div>
@@ -120,9 +131,6 @@
     </div>
 
     <script>
-        // ========================================================
-        // ★★★ 여기에 구글 시트에서 복사한 웹앱 URL을 붙여넣으세요! ★★★
-        // ========================================================
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby0y7FJVHweFAaCvEqNadpqys4bZKbADrUB_9zxd88do3RY10EU_RllJvkmAvILpSk/exec';
         
         let globalData = []; 
@@ -155,6 +163,7 @@
         function resetFilters() {
             document.getElementById('filterDate').value = 'all';
             document.getElementById('filterClass').value = 'all';
+            document.getElementById('searchName').value = ''; // 이름 검색창 초기화
             toggleTrack(document.querySelector('#trackFilters .filter-pill[onclick*="all"]'), 'all');
         }
 
@@ -215,16 +224,25 @@
         function renderAll() {
             const dateFilter = document.getElementById('filterDate').value;
             const classFilter = document.getElementById('filterClass').value;
+            const searchName = document.getElementById('searchName').value.trim(); // 입력된 학생 이름 가져오기
+
             let filteredData = globalData.filter(row => {
                 const d = getFlexibleValue(row, '날짜');
                 const t = getFlexibleValue(row, '계열');
                 const id = getFlexibleValue(row, '학번', '').toString();
+                const name = getFlexibleValue(row, '이름', '').toString();
+
                 let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
                 let classMatch = (classFilter === 'all') || id.startsWith(classFilter);
+                let nameMatch = name.includes(searchName); // 이름 검색 매칭 확인
+
                 let trackMatch = selectedTracks.has('all');
                 if (!trackMatch) { for (let selected of selectedTracks) { if (t.includes(selected)) { trackMatch = true; break; } } }
-                return dateMatch && classMatch && trackMatch;
+                
+                // 이름 검색 조건 추가
+                return dateMatch && classMatch && trackMatch && nameMatch;
             });
+            
             if (isSortedAsc) {
                 filteredData.sort((a, b) => {
                     return getFlexibleValue(a, '학번', '').toString().localeCompare(getFlexibleValue(b, '학번', '').toString());
@@ -284,50 +302,72 @@
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${method}</td>
                     <td>${actualDate}</td>
-                    <td><button class="delete-btn" onclick="deleteData('${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
+                    <!-- ★ this 매개변수를 추가하여 누른 버튼 자체를 인식하게 변경 -->
+                    <td><button class="delete-btn" onclick="deleteData(this, '${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-// ★ 빈 데이터도 묻지도 따지지도 않고 삭제 서버로 전송하도록 제한 해제!
-        async function deleteData(studentId, studentName, timestamp) {
+        // ★ 네트워크 오류 및 중복 삭제를 완벽 방지하는 새 로직
+        async function deleteData(btn, studentId, studentName, timestamp) {
+            if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 완전히 누락)'); return; }
+            
             const confirmMsg = (studentId || studentName) ? 
                 `[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?` : 
                 `이름 없는 빈 데이터를 정말 삭제하시겠습니까?`;
 
             if (!confirm(confirmMsg)) return;
 
-            // 화면에서 즉시 삭제
-            globalData = globalData.filter(row => {
-                const id = getFlexibleValue(row, '학번', '').toString();
-                const name = getFlexibleValue(row, '이름', '').toString();
-                const time = getFlexibleValue(row, '타임스탬프', '').toString();
-                
-                // 이름과 학번이 없는 경우 타임스탬프로만 비교해서 거르기
-                if (!studentId && !studentName) {
-                    return time !== (timestamp || '').toString();
-                }
-                return !(id === (studentId || '').toString() && name === (studentName || '').toString());
-            });
-            renderAll(); 
-
-            if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') return;
+            // 1. 버튼 상태 변경 (로딩 효과 및 중복 클릭 차단)
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '삭제중..';
+            btn.disabled = true;
+            btn.style.background = '#95a5a6';
 
             try {
+                // 2. 서버로 삭제 요청 전송
                 const res = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName, timestamp: timestamp })
                 });
+                
+                if (!res.ok) throw new Error('서버 통신 오류');
                 const result = await res.json();
                 
-                if (result.result !== 'success') {
-                    alert('시트 삭제 실패: ' + result.reason + '\n새로고침(동기화)하면 데이터가 다시 나타납니다. GAS 새 버전 배포를 확인해주세요.');
+                if (result.result === 'success') {
+                    // 3. 서버에서 성공적으로 지워졌다면 화면 데이터 배열에서 '딱 1개만' 제거
+                    const indexToRemove = globalData.findIndex(row => {
+                        const id = getFlexibleValue(row, '학번', '').toString();
+                        const name = getFlexibleValue(row, '이름', '').toString();
+                        const time = getFlexibleValue(row, '타임스탬프', '').toString();
+                        
+                        // 이름과 학번이 없는 경우 타임스탬프로만 비교
+                        if (!studentId && !studentName) {
+                            return time === (timestamp || '').toString();
+                        }
+                        return id === (studentId || '').toString() && 
+                               name === (studentName || '').toString() && 
+                               time === (timestamp || '').toString();
+                    });
+
+                    // 똑같은 데이터가 2개 있어도 첫 번째로 매칭된 1개만 잘라냄(splice)
+                    if (indexToRemove !== -1) {
+                        globalData.splice(indexToRemove, 1);
+                    }
+                    renderAll(); 
+                } else {
+                    alert('시트 삭제 실패: ' + result.reason + '\n새로고침(동기화)하면 데이터가 다시 나타납니다.');
+                    // 실패 시 버튼 원상복구
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.style.background = '#ff7675';
                 }
             } catch (error) { 
                 console.error('삭제 오류:', error); 
-                alert('네트워크 오류로 서버와 통신하지 못했습니다.');
+                alert('통신 지연이 발생했습니다. 안전을 위해 데이터를 다시 동기화합니다.');
+                fetchData(); // 꼬임 방지를 위해 즉시 강제 새로고침
             }
         }
 
