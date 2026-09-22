@@ -257,10 +257,34 @@
         </form>
     </div>
 
-    <script>
+<script>
         // ★ GAS 웹앱 URL 입력 ★
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNy0NIX1NfpxsidBhgXD2X5eQpIB1QGP8ZFGOlvvxohdxGfj7947Hrl2aDHJ1sSnk/exec';
 
+        // ==========================================
+        // 🚨 마감 기한 설정 (이곳의 날짜와 시간을 수정하세요!)
+        // 형식: YYYY-MM-DDTHH:mm:ss (T는 날짜와 시간 구분 기호)
+        // 예시: 2026년 10월 20일 밤 11시 59분 59초 마감
+        // ==========================================
+        const DEADLINE = new Date('2026-09-22T18:00:00');
+
+        // 현재 시간이 마감 기한을 지났는지 확인
+        if (new Date() > DEADLINE) {
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '⛔ 제출 기한이 마감되었습니다';
+            submitBtn.disabled = true;
+            submitBtn.style.background = 'rgba(160, 174, 192, 0.8)';
+            submitBtn.style.cursor = 'not-allowed';
+
+            // 모든 입력칸 막기 (학생들이 더 이상 건드릴 수 없게)
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = true;
+            });
+            
+            // 페이지 접속 시 마감 안내 팝업 띄우기
+            alert('사전조사 제출 기한이 마감되었습니다.');
+        }
+        // ==========================================
         // 전화번호 입력 시 자동으로 하이픈(-) 추가해주는 기능
         const phoneInput = document.getElementById('phone');
         phoneInput.addEventListener('input', (e) => {
