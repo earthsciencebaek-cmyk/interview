@@ -61,13 +61,40 @@
         .card-list-box { background: rgba(255, 255, 255, 0.7); border-radius: 8px; padding: 15px; margin-top: 5px; }
         .card-row { display: flex; border-bottom: 1px dashed #ccc; padding: 8px 0; align-items: center; }
         .card-row:last-child { border-bottom: none; }
-        .card-num { font-weight: bold; color: #667eea; width: 45px; flex-shrink: 0; }
+        .card-num { font-weight: bold; color: #667eea; width: 35px; flex-shrink: 0; }
         .card-info { flex-grow: 1; font-size: 14px; font-weight: 500; }
         
-        /* 수시지원 입력 폼 스타일 */
-        .edit-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-        .edit-row span { font-weight: bold; color: #2c3e50; font-size: 14px; width: 45px; text-align: center; }
-        .edit-row input { flex: 1; padding: 8px; border: 1px solid rgba(0,0,0,0.2); border-radius: 6px; background: rgba(255,255,255,0.8); font-size: 13px; }
+        /* ★ 수정됨: 수시지원 입력 폼 스타일 (칸 튀어나감 방지 완벽 적용) */
+        .edit-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%; box-sizing: border-box; }
+        .edit-row span { font-weight: bold; color: #2c3e50; font-size: 14px; width: 35px; text-align: center; flex-shrink: 0; }
+        .edit-row input { 
+            flex: 1; 
+            min-width: 0; /* flex 자식 요소가 부모 너비를 넘지 못하게 강제 */
+            width: 100%;
+            padding: 8px; 
+            border: 1px solid rgba(0,0,0,0.2); 
+            border-radius: 6px; 
+            background: rgba(255,255,255,0.8); 
+            font-size: 13px; 
+            box-sizing: border-box;
+        }
+        
+        /* ★ 추가됨: 플러스 추가 버튼 스타일 */
+        .add-row-btn {
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 5px;
+            background: rgba(102, 126, 234, 0.15); 
+            border: 2px dashed #667eea;
+            color: #667eea; 
+            font-size: 14px;
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .add-row-btn:hover { background: rgba(102, 126, 234, 0.3); }
+
         .save-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9)); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
 
         @media screen and (max-width: 768px) { .top-nav { justify-content: center; padding: 15px; } .top-nav h2 { width: 100%; text-align: center; border-right: none; padding-right: 0; margin-bottom: 10px; } .ml-auto { margin-left: 0; width: 100%; justify-content: center; } .tab-btn { flex: 1; justify-content: center; } .main-content { padding: 15px; } }
@@ -129,7 +156,8 @@
                             <th>목표 대학/전형/학과</th>
                             <th>1차 합격 여부</th>
                             <th>실제 면접일</th>
-                            <th>수시 지원 카드</th>
+                            <!-- ★ 수정됨: 수시 지원 카드 제목 가운데 정렬 -->
+                            <th style="text-align: center;">수시 지원 카드</th>
                             <th>관리</th>
                         </tr>
                     </thead>
@@ -149,7 +177,6 @@
             <div class="modal-item"><span>연습 목표 전형 정보</span><div id="m-target"></div></div>
             <div class="modal-item"><span>1차 합격 여부 / 1차 발표일 / 실제 면접일</span><div id="m-schedule"></div></div>
             <div class="modal-item"><span>💬 솔직한 고민</span><div id="m-concern" style="background: rgba(255,234,167,0.4); min-height: 60px;"></div></div>
-            <!-- ★ 추가된 수시지원 카드 현황 영역 -->
             <div class="modal-item" style="margin-top: 20px;">
                 <span>📋 수시지원 카드 현황 (전체)</span>
                 <div id="m-cards" class="card-list-box"></div>
@@ -163,20 +190,26 @@
             <button class="close-btn" onclick="closeModal('cardEditModal')">X</button>
             <h2 style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">📋 수시지원 카드 등록</h2>
             <p id="cardEditTargetName" style="font-weight: bold; color: #667eea; margin-bottom: 15px;"></p>
+            
             <div id="cardInputContainer">
-                <!-- 자바스크립트로 6개 입력칸 자동 생성 -->
+                <!-- 자바스크립트로 최대 6개 입력칸 생성 및 표시 제어 -->
             </div>
+            
+            <!-- ★ 추가됨: 순차적으로 칸을 늘리는 플러스 버튼 -->
+            <button id="addCardRowBtn" class="add-row-btn" type="button" onclick="addCardRow()">➕ 대학 추가하기</button>
+            
             <button class="save-btn" onclick="saveCards()">저장하기</button>
         </div>
     </div>
 
     <script>
+        // ★★★ 여기에 구글 시트에서 복사한 웹앱 URL을 붙여넣으세요! ★★★
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyRF9Rdsh-IaYRj6otA2fJ6poM9LxmuCBnwjXAepWs-ATuUslBiOBWiYK3Al2kx0T4/exec';
         
         let globalData = []; 
         let selectedTracks = new Set(['all']);
         let isSortedAsc = false;
-        let editingStudent = null; // 현재 수시지원 카드를 수정 중인 학생 정보
+        let editingStudent = null; 
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -308,7 +341,6 @@
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
                 
-                // 수시지원 카드 등록 여부에 따라 뱃지 표시
                 const cardsStr = getFlexibleValue(student, '수시지원', '');
                 const hasCards = cardsStr && cardsStr.length > 5;
                 const badge = hasCards ? ' <span style="font-size:10px; background:#2ecc71; color:white; padding:2px 5px; border-radius:10px;">카드등록됨</span>' : '';
@@ -339,9 +371,8 @@
                 const studentName = getFlexibleValue(student, '이름', '');
                 const timestamp = getFlexibleValue(student, '타임스탬프', '');
 
-                // ★ 추가됨: 수시 지원 카드 데이터 확인 후 버튼 텍스트/색상 결정
                 const cardsStr = getFlexibleValue(student, '수시지원', '');
-                const hasCards = cardsStr && cardsStr.length > 5; // JSON 문자열이 있는지 기본 판별
+                const hasCards = cardsStr && cardsStr.length > 5; 
                 const btnText = hasCards ? '수정' : '등록';
                 const btnClass = hasCards ? 'edit-btn' : 'reg-btn';
 
@@ -354,15 +385,14 @@
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${method}</td>
                     <td>${actualDate}</td>
-                    <!-- ★ 추가됨: 수시지원 등록 버튼 -->
-                    <td><button class="${btnClass}" onclick="openCardEditModal('${studentId}', '${studentName}', '${escapeQuotes(cardsStr)}')">${btnText}</button></td>
+                    <!-- ★ 수정됨: 셀 중앙 정렬 적용 (등록 버튼) -->
+                    <td style="text-align: center;"><button class="${btnClass}" onclick="openCardEditModal('${studentId}', '${studentName}', '${escapeQuotes(cardsStr)}')">${btnText}</button></td>
                     <td><button class="delete-btn" onclick="deleteData(this, '${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 따옴표 오류 방지를 위한 헬퍼 함수
         function escapeQuotes(str) {
             return str ? str.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
         }
@@ -371,7 +401,7 @@
         }
 
         // ==========================================
-        // ★ 추가됨: 수시지원 카드 모달 열기 및 세팅
+        // ★ 수정됨: 수시지원 카드 모달 열기 및 세팅 (순차 오픈 로직 포함)
         // ==========================================
         function openCardEditModal(studentId, studentName, cardsStrEscaped) {
             editingStudent = { id: studentId, name: studentName };
@@ -382,7 +412,6 @@
             
             let savedCards = Array(6).fill({univ: '', type: '', dept: ''});
             
-            // 기존에 저장된 데이터가 있다면 불러오기
             if (cardsStrEscaped && cardsStrEscaped.length > 5) {
                 try {
                     const parsed = JSON.parse(unescapeQuotes(cardsStrEscaped));
@@ -394,21 +423,51 @@
                 } catch(e) { console.error("카드 데이터 파싱 오류", e); }
             }
 
-            // 6개의 입력 줄 생성
+            // 6개 입력칸 생성 및 표시 여부 결정
             for (let i = 0; i < 6; i++) {
+                // 저장된 데이터가 있거나, 첫 번째 칸(index 0)이면 노출 (display: flex)
+                const hasData = savedCards[i].univ || savedCards[i].type || savedCards[i].dept;
+                const displayStyle = (i === 0 || hasData) ? 'flex' : 'none';
+
                 container.innerHTML += `
-                    <div class="edit-row">
-                        <span>${i+1}지망</span>
+                    <div class="edit-row" id="cardRow_${i}" style="display: ${displayStyle};">
+                        <!-- ★ 수정됨: '지망' 대신 '번' 사용 -->
+                        <span>${i+1}번</span>
                         <input type="text" id="c_u_${i}" placeholder="대학명" value="${savedCards[i].univ}">
                         <input type="text" id="c_t_${i}" placeholder="전형명" value="${savedCards[i].type}">
                         <input type="text" id="c_d_${i}" placeholder="학과명" value="${savedCards[i].dept}">
                     </div>
                 `;
             }
+            
+            checkAddButtonVisibility(); // 추가 버튼 숨김/표시 업데이트
             document.getElementById('cardEditModal').style.display = 'flex';
         }
 
-        // ★ 추가됨: 수시지원 카드 저장하여 구글 시트로 쏘기
+        // ★ 추가됨: 플러스 버튼 클릭 시 다음 줄 표시 로직
+        function addCardRow() {
+            for (let i = 1; i < 6; i++) {
+                const row = document.getElementById(`cardRow_${i}`);
+                if (row.style.display === 'none') {
+                    row.style.display = 'flex';
+                    break; // 한 번에 한 줄씩만 추가
+                }
+            }
+            checkAddButtonVisibility();
+        }
+
+        // ★ 추가됨: 모든 줄(6개)이 열려있으면 플러스 버튼 숨기기
+        function checkAddButtonVisibility() {
+            let allVisible = true;
+            for (let i = 0; i < 6; i++) {
+                if (document.getElementById(`cardRow_${i}`).style.display === 'none') {
+                    allVisible = false;
+                    break;
+                }
+            }
+            document.getElementById('addCardRowBtn').style.display = allVisible ? 'none' : 'block';
+        }
+
         async function saveCards() {
             if(!editingStudent) return;
             const btn = document.querySelector('#cardEditModal .save-btn');
@@ -439,7 +498,6 @@
                 
                 const result = await res.json();
                 if (result.result === 'success') {
-                    // 화면 데이터(globalData)도 즉시 갱신
                     const target = globalData.find(r => 
                         getFlexibleValue(r, '학번','').toString() === editingStudent.id && 
                         getFlexibleValue(r, '이름','').toString() === editingStudent.name
@@ -447,7 +505,7 @@
                     if (target) {
                         const cardKey = Object.keys(target).find(k => k.includes('수시지원'));
                         if (cardKey) target[cardKey] = cardsDataStr;
-                        else target['수시지원'] = cardsDataStr; // 새 키 생성
+                        else target['수시지원'] = cardsDataStr; 
                     }
                     
                     renderAll();
@@ -464,7 +522,6 @@
             btn.disabled = false;
         }
 
-        // 삭제 로직 (유지)
         async function deleteData(btn, studentId, studentName, timestamp) {
             if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
             if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
@@ -501,7 +558,6 @@
             }
         }
 
-        // 모달 열기 (학생 상세 정보 및 하단 카드 렌더링)
         function openModal(student) {
             document.getElementById('m-name').innerText = getFlexibleValue(student, '학번', '') + ' ' + getFlexibleValue(student, '이름', '');
             document.getElementById('m-info').innerText = `📞 ${getFlexibleValue(student, '전화번호', '-')}`;
@@ -518,9 +574,8 @@
             document.getElementById('m-schedule').innerHTML = scheduleText;
             document.getElementById('m-concern').innerText = concern;
 
-            // ★ 추가됨: 하단 수시지원 카드 리스트 렌더링
             const cardsBox = document.getElementById('m-cards');
-            cardsBox.innerHTML = ''; // 초기화
+            cardsBox.innerHTML = ''; 
             const cardsStr = getFlexibleValue(student, '수시지원', '');
             
             if (cardsStr && cardsStr.length > 5) {
@@ -532,7 +587,8 @@
                             hasAnyData = true;
                             cardsBox.innerHTML += `
                                 <div class="card-row">
-                                    <div class="card-num">${idx + 1}지망</div>
+                                    <!-- ★ 수정됨: 모달 상세 뷰에서도 '지망' 대신 '번' 사용 -->
+                                    <div class="card-num">${idx + 1}번</div>
                                     <div class="card-info">${card.univ || '-'} / ${card.type || '-'} / ${card.dept || '-'}</div>
                                 </div>
                             `;
@@ -549,10 +605,8 @@
             document.getElementById('detailModal').style.display = 'flex';
         }
 
-        // 모달 닫기
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
         
-        // 배경 클릭 시 닫기
         document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target === this) closeModal('detailModal'); });
         document.getElementById('cardEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('cardEditModal'); });
         
