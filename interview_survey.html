@@ -128,7 +128,7 @@
 
         /* 조건부 노출 영역 */
         #passDateGroup {
-            display: none; /* 초기에는 숨김 */
+            display: none;
             margin-top: 10px;
             padding-left: 25px;
             animation: fadeIn 0.3s ease-in-out;
@@ -139,11 +139,25 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* ★ 제출 기한 안내 박스 스타일 ★ */
+        .deadline-notice {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #c0392b;
+            background: rgba(255, 234, 167, 0.7);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px dashed #e15f41;
+            transition: all 0.3s ease;
+        }
+
         /* 제출 버튼 */
         button[type="submit"] {
             width: 100%;
             padding: 15px;
-            margin-top: 20px;
+            margin-top: 5px; /* 안내 문구와의 간격 조절을 위해 여백 축소 */
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
             color: white;
             border: none;
@@ -192,7 +206,6 @@
 
             <div class="form-group">
                 <label for="phone">📱 전화번호</label>
-                <!-- 하이픈 자동 입력 기능이 적용된 tel 필드 -->
                 <input type="tel" id="phone" required placeholder="010-0000-0000" maxlength="13">
             </div>
 
@@ -230,7 +243,6 @@
                         <label for="type1">1차 합격 발표 후 면접 진행</label>
                     </div>
                     
-                    <!-- 1차 합격 후 진행을 선택했을 때만 나타나는 날짜 선택창 -->
                     <div id="passDateGroup">
                         <label for="firstPassDate" style="font-size: 13px; color: #d63031;">└ 1차 합격자 발표일을 선택해주세요 📍</label>
                         <input type="date" id="firstPassDate">
@@ -253,6 +265,11 @@
                 <textarea id="concern" required placeholder="긴장을 많이 한다거나, 특정 질문이 두렵다거나 등 편하게 적어주세요."></textarea>
             </div>
 
+            <!-- ★ 추가됨: 제출 버튼 바로 위 마감 안내 문구 박스 -->
+            <div id="deadlineNotice" class="deadline-notice">
+                로딩 중...
+            </div>
+
             <button type="submit">제출하기</button>
         </form>
     </div>
@@ -263,32 +280,52 @@
 
         // ==========================================
         // 🚨 마감 기한 설정 (이곳의 날짜와 시간을 수정하세요!)
-        // 형식: YYYY-MM-DDTHH:mm:ss (T는 날짜와 시간 구분 기호)
-        // 예시: 2026년 10월 20일 밤 11시 59분 59초 마감
         // ==========================================
         const DEADLINE = new Date('2026-09-23T18:00:00');
 
-        // 현재 시간이 마감 기한을 지났는지 확인
+        // ★ 마감 시간을 한글로 예쁘게 변환하여 화면에 자동 표시해주는 로직
+        const noticeEl = document.getElementById('deadlineNotice');
+        
+        function formatDeadline(d) {
+            const month = d.getMonth() + 1;
+            const date = d.getDate();
+            const ampm = d.getHours() >= 12 ? '오후' : '오전';
+            let hours = d.getHours() % 12;
+            hours = hours ? hours : 12; // 0시는 12시로 표시
+            const minutes = d.getMinutes().toString().padStart(2, '0');
+            return `${month}월 ${date}일 ${ampm} ${hours}시 ${minutes}분`;
+        }
+
+        noticeEl.innerText = `⏳ 제출 마감: ${formatDeadline(DEADLINE)} 까지`;
+
+        // 현재 시간이 마감 기한을 지났는지 확인하여 화면 제어
         if (new Date() > DEADLINE) {
+            // 마감 안내 박스 스타일 및 텍스트 변경
+            noticeEl.innerText = '⛔ 제출 기한이 마감되었습니다';
+            noticeEl.style.background = '#ff7675';
+            noticeEl.style.color = 'white';
+            noticeEl.style.borderColor = '#d63031';
+
             const submitBtn = document.querySelector('button[type="submit"]');
-            submitBtn.innerHTML = '⛔ 제출 기한이 마감되었습니다';
+            submitBtn.innerHTML = '⛔ 기한 마감';
             submitBtn.disabled = true;
             submitBtn.style.background = 'rgba(160, 174, 192, 0.8)';
             submitBtn.style.cursor = 'not-allowed';
 
-            // 모든 입력칸 막기 (학생들이 더 이상 건드릴 수 없게)
+            // 모든 입력칸 막기
             document.querySelectorAll('input, select, textarea').forEach(el => {
                 el.disabled = true;
             });
             
-            // 페이지 접속 시 마감 안내 팝업 띄우기
             alert('사전조사 제출 기한이 마감되었습니다.');
         }
         // ==========================================
-        // 전화번호 입력 시 자동으로 하이픈(-) 추가해주는 기능
+
+
+        // 전화번호 하이픈(-) 자동 완성
         const phoneInput = document.getElementById('phone');
         phoneInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 남기기
+            let value = e.target.value.replace(/[^0-9]/g, ''); 
             if (value.length > 3 && value.length <= 7) {
                 value = value.slice(0, 3) + '-' + value.slice(3);
             } else if (value.length > 7) {
@@ -297,7 +334,7 @@
             e.target.value = value;
         });
 
-        // '1차 합격 후 진행' 선택 시 날짜 입력창 보이기/숨기기 로직
+        // '1차 합격 후 진행' 선택 시 날짜 입력창 보이기/숨기기
         const radio1 = document.getElementById('type1');
         const radio2 = document.getElementById('type2');
         const passDateGroup = document.getElementById('passDateGroup');
@@ -306,22 +343,21 @@
         function togglePassDate() {
             if (radio1.checked) {
                 passDateGroup.style.display = 'block';
-                firstPassDateInput.required = true; // 필수 입력으로 변경
+                firstPassDateInput.required = true; 
             } else {
                 passDateGroup.style.display = 'none';
-                firstPassDateInput.required = false; // 필수 입력 해제
-                firstPassDateInput.value = ''; // 값 초기화
+                firstPassDateInput.required = false; 
+                firstPassDateInput.value = ''; 
             }
         }
 
         radio1.addEventListener('change', togglePassDate);
         radio2.addEventListener('change', togglePassDate);
 
-        // 폼 제출 로직
+        // 폼 제출 
         document.getElementById('interviewForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // --- 입력 정보 확인용 팝업(Confirm) 추가 ---
             const studentId = document.getElementById('studentId').value;
             const studentName = document.getElementById('studentName').value;
             const phone = document.getElementById('phone').value;
@@ -329,18 +365,15 @@
             
             const confirmMessage = `입력하신 정보가 맞는지 확인해주세요.\n\n▶ 학번: ${studentId}\n▶ 이름: ${studentName}\n▶ 전화번호: ${phone}\n▶ 참여 희망 날짜: ${participationDate}\n\n맞으면 [확인], 수정하려면 [취소]를 눌러주세요.`;
             
-            // 사용자가 '취소'를 누르면 제출 중단
             if (!confirm(confirmMessage)) {
                 return; 
             }
-            // -------------------------------------------
             
             const submitBtn = document.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '제출 중... ⏳';
             submitBtn.disabled = true;
             
-            // 폼 데이터 수집
             const data = {
                 studentId: studentId,
                 studentName: studentName,
@@ -357,30 +390,27 @@
             };
 
             if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
-                console.log("수집된 데이터:", data);
-                alert('프론트엔드 UI 테스트 완료!\n(F12 콘솔에서 세분화된 데이터를 확인하세요)\n\nGAS URL 연동 후 시트로 전송됩니다.');
+                alert('URL을 입력해주세요.');
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
                 return;
             }
 
-            // ★ 수정됨: mode: 'no-cors' 적용으로 구글 서버 대기시간 삭제 및 에러 방지
+            // 구글 서버로 빠르게 데이터 전송 (no-cors 적용)
             fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // 응답을 기다리지 않고 곧바로 전송 성공 처리
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(data)
             })
             .then(() => {
-                // no-cors 모드에서는 오류 없이 이 블록으로 즉시 넘어옵니다.
                 alert('사전조사가 성공적으로 제출되었습니다! 🎉');
                 document.getElementById('interviewForm').reset();
-                togglePassDate(); // 날짜 입력창 상태 초기화
+                togglePassDate(); 
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             })
             .catch(error => {
-                // 인터넷 연결 자체가 끊긴 등 심각한 네트워크 오류 시에만 작동
                 console.error('Error:', error);
                 alert('전송 중 통신 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
                 submitBtn.innerHTML = originalText;
