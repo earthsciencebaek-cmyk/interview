@@ -20,7 +20,7 @@
         .title-container { display: flex; align-items: center; gap: 10px; }
         .filter-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         
-        /* ★ 신규 추가: 커스텀 드롭다운 (글래스모피즘) 스타일 */
+        /* 커스텀 드롭다운 (글래스모피즘) 스타일 */
         .custom-select { position: relative; display: inline-block; font-weight: bold; height: 40px; min-width: 130px; }
         .select-selected { background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 8px; padding: 8px 30px 8px 12px; cursor: pointer; height: 100%; box-sizing: border-box; display: flex; align-items: center; color: #2c3e50; user-select: none; position: relative; transition: all 0.2s; white-space: nowrap; }
         .select-selected::after { content: "▼"; position: absolute; right: 12px; font-size: 10px; color: #2c3e50; transition: transform 0.3s; }
@@ -71,7 +71,8 @@
         .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,0,0,0.1); border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; color: #d63031; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .modal-item { margin-bottom: 15px; }
         .modal-item span { display: block; font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 4px; }
-        .modal-item div { font-size: 15px; font-weight: 500; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; line-height: 1.5; }
+        /* 모달 내부 박스 여백 및 줄간격 슬림화 */
+        .modal-item div { font-size: 15px; font-weight: 500; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 8px; line-height: 1.4; }
         .loading { text-align: center; font-size: 18px; font-weight: bold; padding: 50px; display: none; }
 
         .card-list-box { background: rgba(255, 255, 255, 0.7); border-radius: 8px; padding: 15px; margin-top: 5px; }
@@ -108,7 +109,6 @@
                 <h3 id="studentCount" style="margin: 0; font-size: 22px; color: #e15f41;">(총 0명)</h3>
             </div>
             <div class="filter-group">
-                <!-- ★ 커스텀 디자인 드롭다운 적용 부분 -->
                 <div class="custom-select" id="customFilterDate">
                     <div class="select-selected">🗓️ 모든 날짜</div>
                     <div class="select-items select-hide">
@@ -179,7 +179,6 @@
             <div class="modal-item"><span>학번 / 전화번호</span><div id="m-info"></div></div>
             <div class="modal-item"><span>모의면접 희망 날짜</span><div id="m-date"></div></div>
             <div class="modal-item"><span>연습 목표 전형 정보</span><div id="m-target"></div></div>
-            <!-- ★ 면접일정 안내란 (JS에서 줄바꿈 및 스타일 정렬됨) -->
             <div class="modal-item"><span>1차 합격 여부 / 1차 발표일 / 실제 면접일</span><div id="m-schedule"></div></div>
             <div class="modal-item"><span>💬 솔직한 고민</span><div id="m-concern" style="background: rgba(255,234,167,0.4); min-height: 60px;"></div></div>
             
@@ -227,9 +226,7 @@
         let isSortedAsc = false;
         let editingStudent = null; 
 
-        // ==========================================
-        // ★ 커스텀 드롭다운 JS 제어
-        // ==========================================
+        // 커스텀 드롭다운 JS 제어
         function initCustomSelects() {
             document.querySelectorAll('.custom-select').forEach(el => {
                 attachCustomSelectEvents(el);
@@ -241,7 +238,6 @@
             const itemsContainer = customSelectEl.querySelector('.select-items');
             const input = customSelectEl.querySelector('input[type="hidden"]');
             
-            // 기존 이벤트 리스너 방지를 위해 노드 교체
             const newSelected = selected.cloneNode(true);
             selected.parentNode.replaceChild(newSelected, selected);
             selected = newSelected;
@@ -261,7 +257,7 @@
                     input.value = this.getAttribute('data-value');
                     itemsContainer.classList.add('select-hide');
                     customSelectEl.classList.remove('open');
-                    renderAll(); // 선택 즉시 필터링 실행
+                    renderAll();
                 });
             });
         }
@@ -276,8 +272,6 @@
         }
         document.addEventListener('click', () => closeAllSelect(null));
 
-
-        // 화면 전환 로직
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -305,7 +299,6 @@
         }
 
         function resetFilters() {
-            // 히든 인풋 및 커스텀 셀렉트 UI 초기화
             document.getElementById('filterDate').value = 'all';
             document.querySelector('#customFilterDate .select-selected').innerText = '🗓️ 모든 날짜';
             
@@ -337,8 +330,6 @@
             sortedClasses.forEach(cls => {
                 classItems.innerHTML += `<div data-value="${cls}">${cls}반</div>`;
             });
-            
-            // 옵션이 변경되었으므로 이벤트 리스너 재부착
             attachCustomSelectEvents(document.getElementById('customFilterClass'));
         }
 
@@ -376,7 +367,6 @@
             return methodStr;
         }
 
-        // ★ 날짜 포맷 깔끔하게 개선 (00:00:00 제거)
         function formatToDateOnly(dateString) {
             if (!dateString || dateString === '해당없음' || dateString === '-' || dateString === '미입력') return dateString;
             let str = String(dateString);
@@ -400,7 +390,6 @@
         }
 
         function renderAll() {
-            // 히든 인풋에서 선택된 값 가져오기
             const dateFilter = document.getElementById('filterDate').value;
             const classFilter = document.getElementById('filterClass').value;
             const searchName = document.getElementById('searchName').value.trim(); 
@@ -507,9 +496,7 @@
             });
         }
 
-        // ==========================================
         // 수시지원 카드 관련 
-        // ==========================================
         function openCardEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('cardEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
@@ -599,9 +586,7 @@
             }).catch(e => console.error(e));
         }
 
-        // ==========================================
         // 담임선생님 의견 관련 
-        // ==========================================
         function openCommentEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
@@ -662,7 +647,7 @@
             }).catch(e => console.error(e));
         }
 
-        // ★ 모달 상세정보 표시 개선 (줄바꿈 방지 및 정렬)
+        // ★ 모달 상세정보 표시 개선 (1차 합격 여부 줄바꿈 방지 및 자연스러운 간격 배치)
         function openModal(student) {
             document.getElementById('m-name').innerText = getFlexibleValue(student, '학번', '') + ' ' + getFlexibleValue(student, '이름', '');
             document.getElementById('m-info').innerText = `📞 ${getFlexibleValue(student, '전화번호', '-')}`;
@@ -675,13 +660,13 @@
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
             
-            // 줄바꿈이 깔끔하게 이루어지도록 flex 컨테이너로 구조 변경
+            // white-space: nowrap을 주어 '1차 합격 여부:'와 내용이 같은 줄에 바로 오도록 설정하고, gap을 3px로 좁혀 자연스러운 줄간격 배치
             let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 3px;">`;
-            scheduleHtml += `<div>✅ 1차 합격 여부: <span style="font-weight:bold;">${styledMethod}</span></div>`;
+            scheduleHtml += `<div style="white-space: nowrap;">✅ 1차 합격 여부: <span style="font-weight:bold;">${styledMethod}</span></div>`;
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
-                scheduleHtml += `<div>🎯 1차 발표일: ${passDate}</div>`; 
+                scheduleHtml += `<div style="white-space: nowrap;">🎯 1차 발표일: ${passDate}</div>`; 
             }
-            scheduleHtml += `<div>🚨 실제 면접일: ${actualDate}</div>`;
+            scheduleHtml += `<div style="white-space: nowrap;">🚨 실제 면접일: ${actualDate}</div>`;
             scheduleHtml += `</div>`;
             
             document.getElementById('m-schedule').innerHTML = scheduleHtml;
@@ -734,7 +719,7 @@
         document.getElementById('commentEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('commentEditModal'); });
         
         window.onload = () => {
-            initCustomSelects(); // 커스텀 드롭다운 최초 세팅
+            initCustomSelects();
             fetchData();
         };
     </script>
