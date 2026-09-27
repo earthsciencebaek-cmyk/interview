@@ -676,7 +676,7 @@
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
             
             // 줄바꿈이 깔끔하게 이루어지도록 flex 컨테이너로 구조 변경
-            let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 6px;">`;
+            let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 3px;">`;
             scheduleHtml += `<div>✅ 1차 합격 여부: <span style="font-weight:bold;">${styledMethod}</span></div>`;
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
                 scheduleHtml += `<div>🎯 1차 발표일: ${passDate}</div>`; 
