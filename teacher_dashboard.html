@@ -50,10 +50,6 @@
         .edit-btn:hover { background-color: #27ae60; }
         .cmt-btn { background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .cmt-btn:hover { background-color: #d35400; }
-        
-        /* ★ 링크 이동 버튼 스타일 */
-        .link-btn { background-color: #8e44ad; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .link-btn:hover { background-color: #9b59b6; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; overflow-y: auto; padding: 20px; }
         .modal-content { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-radius: 20px; padding: 30px; width: 100%; max-width: 550px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; margin: auto; }
@@ -86,6 +82,9 @@
         <h2>🎯 면접 대비반 관리</h2>
         <button class="tab-btn active" onclick="switchTab('gallery')">📇 참여 학생 정보 카드</button>
         <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
+        <!-- ★ 상단 탭 메뉴에 진학자료집 링크 버튼 추가 -->
+        <button class="tab-btn" onclick="window.open('https://goejinhak.kr', '_blank')" style="background: rgba(142, 68, 173, 0.15); border-color: rgba(142, 68, 173, 0.4); color: #8e44ad;">📘 경기도교육청 진학자료집</button>
+        
         <button class="tab-btn ml-auto" onclick="fetchData()" style="background: rgba(255,255,255,0.2); border: 1px dashed #333;">🔄 서버 동기화</button>
     </div>
     
@@ -139,8 +138,7 @@
                             <th>면접일</th>
                             <th style="text-align: center;">수시 지원 카드</th>
                             <th style="text-align: center;">담임선생님 의견</th>
-                            <!-- ★ 신규: 경기도교육청 링크 칼럼 추가 -->
-                            <th style="text-align: center;">경기도교육청<br>진학자료집</th>
+                            <!-- ★ 삭제됨: 경기도교육청 진학자료집 열 삭제 -->
                             <th>관리</th>
                         </tr>
                     </thead>
@@ -209,7 +207,11 @@
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabId + '-tab').classList.add('active');
-            event.currentTarget.classList.add('active');
+            
+            // 탭 메뉴 클릭 시 활성화 클래스 추가 (단, 외부 링크 버튼은 제외)
+            if (event.currentTarget.classList.contains('tab-btn')) {
+                event.currentTarget.classList.add('active');
+            }
             document.getElementById('currentTabTitle').innerText = tabId === 'gallery' ? '면접 대비반 참여 학생 정보 카드' : '전체 수합 데이터';
         }
 
@@ -295,7 +297,6 @@
             return dateString;
         }
 
-        // ★ 줄바꿈, 특수기호 안전 변환 (오류 방지 핵심 코드)
         function encodeForHtml(str) {
             if (!str) return '';
             return encodeURIComponent(str).replace(/'/g, "%27");
@@ -305,13 +306,11 @@
             return decodeURIComponent(str);
         }
 
-        // ★ 카드가 1개라도 실질적으로 등록되어 있는지 검사하는 함수
         function checkHasCards(cardsStr) {
             if (!cardsStr || cardsStr.length <= 5) return false;
             try {
                 const parsed = JSON.parse(cardsStr);
                 if (Array.isArray(parsed)) {
-                    // 단 한 칸이라도 내용이 채워져 있으면 true
                     return parsed.some(c => (c.univ && c.univ.trim()) || (c.type && c.type.trim()) || (c.dept && c.dept.trim()));
                 }
             } catch(e) {}
@@ -364,7 +363,6 @@
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
                 
-                // ★ 카드 배열 내부 검사 적용
                 const cardsStr = getFlexibleValue(student, '수시지원', '');
                 const hasCards = checkHasCards(cardsStr);
                 const badge = hasCards ? ' <span style="font-size:10px; background:#2ecc71; color:white; padding:2px 5px; border-radius:10px;">카드등록됨</span>' : '';
@@ -399,7 +397,6 @@
                 const studentName = getFlexibleValue(student, '이름', '');
                 const timestamp = getFlexibleValue(student, '타임스탬프', '');
 
-                // ★ 카드 배열 내부 검사 적용
                 const cardsStr = getFlexibleValue(student, '수시지원', '');
                 const hasCards = checkHasCards(cardsStr); 
                 const cardBtnText = hasCards ? '수정' : '등록';
@@ -411,7 +408,6 @@
                 const cmtBtnClass = hasComment ? 'edit-btn' : 'cmt-btn';
 
                 const tr = document.createElement('tr');
-                // 따옴표, 엔터키 문제 방지를 위해 안전하게 인코딩 처리
                 tr.innerHTML = `
                     <td><b>${getFlexibleValue(student, '날짜', '-')}</b></td>
                     <td>${studentId}</td>
@@ -422,7 +418,7 @@
                     <td>${actualDate}</td>
                     <td style="text-align: center;"><button class="${cardBtnClass}" onclick="openCardEditModal('${studentId}', '${studentName}', '${encodeForHtml(cardsStr)}')">${cardBtnText}</button></td>
                     <td style="text-align: center;"><button class="${cmtBtnClass}" onclick="openCommentEditModal('${studentId}', '${studentName}', '${encodeForHtml(commentStr)}')">${cmtBtnText}</button></td>
-                    <td style="text-align: center;"><button class="link-btn" onclick="window.open('https://goejinhak.kr', '_blank')">링크 이동</button></td>
+                    <!-- ★ 열 삭제됨 -->
                     <td><button class="delete-btn" onclick="deleteData(this, '${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -502,7 +498,6 @@
             }
             const cardsDataStr = JSON.stringify(cards);
 
-            // ★ 1. 화면 즉시 반영 (딜레이 0초)
             const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
             if (target) {
                 const cardKey = Object.keys(target).find(k => k.includes('수시지원'));
@@ -514,7 +509,6 @@
             
             btn.innerHTML = originalText; btn.disabled = false;
 
-            // ★ 2. 백그라운드 서버 전송 (응답 안 기다림)
             fetch(WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -529,8 +523,6 @@
         function openCommentEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
-            
-            // ★ 인코딩된 문자열을 안전하게 복원
             document.getElementById('teacherCommentInput').value = decodeForHtml(encodedStr);
             document.getElementById('commentEditModal').style.display = 'flex';
         }
@@ -543,7 +535,6 @@
 
             const text = document.getElementById('teacherCommentInput').value.trim();
 
-            // ★ 1. 화면 즉시 반영 (딜레이 0초)
             const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
             if (target) {
                 const cmtKey = Object.keys(target).find(k => k.includes('담임의견'));
@@ -555,7 +546,6 @@
 
             btn.innerHTML = originalText; btn.disabled = false;
 
-            // ★ 2. 백그라운드 서버 전송
             fetch(WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -564,7 +554,7 @@
             }).catch(e => console.error(e));
         }
 
-        // 삭제 로직 (삭제도 딜레이 없이 즉시 처리되도록 수정)
+        // 삭제 로직
         function deleteData(btn, studentId, studentName, timestamp) {
             if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
             if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
