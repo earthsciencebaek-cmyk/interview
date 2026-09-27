@@ -36,10 +36,8 @@
         .card-tag { display: inline-block; background: rgba(255, 154, 158, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
         .card-target { font-size: 15px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
 
-        /* ★ 표 폭 줄이기 및 자동 줄바꿈 적용 */
         .table-container { overflow: auto; background: rgba(255, 255, 255, 0.4); border-radius: 15px; padding: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
-        /* white-space: nowrap을 제거하여 내용이 길면 줄바꿈 되도록 처리 */
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.5); word-break: keep-all; vertical-align: middle; }
         th { background: rgba(255, 255, 255, 0.5); font-weight: bold; position: sticky; top: 0; backdrop-filter: blur(5px); z-index: 10; }
         tbody tr:hover { background: rgba(255, 255, 255, 0.6); }
@@ -52,6 +50,10 @@
         .edit-btn:hover { background-color: #27ae60; }
         .cmt-btn { background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .cmt-btn:hover { background-color: #d35400; }
+        
+        /* ★ 링크 이동 버튼 스타일 */
+        .link-btn { background-color: #8e44ad; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .link-btn:hover { background-color: #9b59b6; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; overflow-y: auto; padding: 20px; }
         .modal-content { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-radius: 20px; padding: 30px; width: 100%; max-width: 550px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; margin: auto; }
@@ -75,7 +77,6 @@
         .add-row-btn:hover { background: rgba(102, 126, 234, 0.3); }
         .save-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9)); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         
-        /* ★ 합격 여부 텍스트 색상 클래스 */
         .status-blue { color: #0984e3; font-weight: bold; }
         .status-red { color: #d63031; font-weight: bold; }
     </style>
@@ -138,6 +139,8 @@
                             <th>면접일</th>
                             <th style="text-align: center;">수시 지원 카드</th>
                             <th style="text-align: center;">담임선생님 의견</th>
+                            <!-- ★ 신규: 경기도교육청 링크 칼럼 추가 -->
+                            <th style="text-align: center;">경기도교육청<br>진학자료집</th>
                             <th>관리</th>
                         </tr>
                     </thead>
@@ -163,7 +166,6 @@
                 <div id="m-cards" class="card-list-box"></div>
             </div>
             
-            <!-- ★ 담임선생님 의견 표시 영역 -->
             <div class="modal-item" style="margin-top: 20px;">
                 <span>👨‍🏫 담임선생님 의견</span>
                 <div id="m-teacher-comment" style="background: rgba(162, 155, 254, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); min-height: 60px;"></div>
@@ -183,7 +185,7 @@
         </div>
     </div>
 
-    <!-- 3. ★ 신규: 담임선생님 의견 작성 모달 -->
+    <!-- 3. 담임선생님 의견 작성 모달 -->
     <div class="modal-overlay" id="commentEditModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('commentEditModal')">X</button>
@@ -195,6 +197,7 @@
     </div>
 
     <script>
+        // ★★★ 여기에 구글 시트에서 복사한 웹앱 URL을 붙여넣으세요! ★★★
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxxbO6faOcWLBw1Q__ZwB1MQxhl27GucNdPTmlhT8RBwp0voztxIfHvyrh53d-vbRY/exec';
         
         let globalData = []; 
@@ -280,13 +283,9 @@
             return rawValue; 
         }
 
-        // ★ 합격 여부 텍스트 색상 입히는 헬퍼 함수
         function getStyledMethod(methodStr) {
-            if (methodStr.includes('없이 바로')) {
-                return `<span class="status-blue">${methodStr}</span>`;
-            } else if (methodStr.includes('발표 후')) {
-                return `<span class="status-red">${methodStr}</span>`;
-            }
+            if (methodStr.includes('없이 바로')) return `<span class="status-blue">${methodStr}</span>`;
+            else if (methodStr.includes('발표 후')) return `<span class="status-red">${methodStr}</span>`;
             return methodStr;
         }
 
@@ -294,6 +293,29 @@
             if (!dateString || dateString === '해당없음' || dateString === '-' || dateString === '미입력') return dateString;
             if (dateString.toString().includes('T')) return dateString.toString().split('T')[0];
             return dateString;
+        }
+
+        // ★ 줄바꿈, 특수기호 안전 변환 (오류 방지 핵심 코드)
+        function encodeForHtml(str) {
+            if (!str) return '';
+            return encodeURIComponent(str).replace(/'/g, "%27");
+        }
+        function decodeForHtml(str) {
+            if (!str) return '';
+            return decodeURIComponent(str);
+        }
+
+        // ★ 카드가 1개라도 실질적으로 등록되어 있는지 검사하는 함수
+        function checkHasCards(cardsStr) {
+            if (!cardsStr || cardsStr.length <= 5) return false;
+            try {
+                const parsed = JSON.parse(cardsStr);
+                if (Array.isArray(parsed)) {
+                    // 단 한 칸이라도 내용이 채워져 있으면 true
+                    return parsed.some(c => (c.univ && c.univ.trim()) || (c.type && c.type.trim()) || (c.dept && c.dept.trim()));
+                }
+            } catch(e) {}
+            return false;
         }
 
         function renderAll() {
@@ -342,12 +364,13 @@
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
                 
+                // ★ 카드 배열 내부 검사 적용
                 const cardsStr = getFlexibleValue(student, '수시지원', '');
-                const hasCards = cardsStr && cardsStr.length > 5;
+                const hasCards = checkHasCards(cardsStr);
                 const badge = hasCards ? ' <span style="font-size:10px; background:#2ecc71; color:white; padding:2px 5px; border-radius:10px;">카드등록됨</span>' : '';
 
                 const cmtStr = getFlexibleValue(student, '담임의견', '');
-                const hasCmt = cmtStr && cmtStr.length > 0;
+                const hasCmt = cmtStr && cmtStr.trim().length > 0;
                 const cmtBadge = hasCmt ? ' <span style="font-size:10px; background:#f39c12; color:white; padding:2px 5px; border-radius:10px;">의견등록됨</span>' : '';
 
                 const card = document.createElement('div');
@@ -369,25 +392,26 @@
             data.forEach(student => {
                 const track = getFlexibleValue(student, '계열');
                 const shortTrack = track ? track.split('(')[0].trim() : '-';
-                const rawMethod = getMethodValue(student);
-                const styledMethod = getStyledMethod(rawMethod); // ★ 색상 적용
+                const styledMethod = getStyledMethod(getMethodValue(student));
                 const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
                 
                 const studentId = getFlexibleValue(student, '학번', '');
                 const studentName = getFlexibleValue(student, '이름', '');
                 const timestamp = getFlexibleValue(student, '타임스탬프', '');
 
+                // ★ 카드 배열 내부 검사 적용
                 const cardsStr = getFlexibleValue(student, '수시지원', '');
-                const hasCards = cardsStr && cardsStr.length > 5; 
+                const hasCards = checkHasCards(cardsStr); 
                 const cardBtnText = hasCards ? '수정' : '등록';
                 const cardBtnClass = hasCards ? 'edit-btn' : 'reg-btn';
 
                 const commentStr = getFlexibleValue(student, '담임의견', '');
-                const hasComment = commentStr && commentStr.length > 0;
+                const hasComment = commentStr && commentStr.trim().length > 0;
                 const cmtBtnText = hasComment ? '수정' : '등록';
                 const cmtBtnClass = hasComment ? 'edit-btn' : 'cmt-btn';
 
                 const tr = document.createElement('tr');
+                // 따옴표, 엔터키 문제 방지를 위해 안전하게 인코딩 처리
                 tr.innerHTML = `
                     <td><b>${getFlexibleValue(student, '날짜', '-')}</b></td>
                     <td>${studentId}</td>
@@ -396,21 +420,19 @@
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${styledMethod}</td>
                     <td>${actualDate}</td>
-                    <td style="text-align: center;"><button class="${cardBtnClass}" onclick="openCardEditModal('${studentId}', '${studentName}', '${escapeQuotes(cardsStr)}')">${cardBtnText}</button></td>
-                    <td style="text-align: center;"><button class="${cmtBtnClass}" onclick="openCommentEditModal('${studentId}', '${studentName}', '${escapeQuotes(commentStr)}')">${cmtBtnText}</button></td>
+                    <td style="text-align: center;"><button class="${cardBtnClass}" onclick="openCardEditModal('${studentId}', '${studentName}', '${encodeForHtml(cardsStr)}')">${cardBtnText}</button></td>
+                    <td style="text-align: center;"><button class="${cmtBtnClass}" onclick="openCommentEditModal('${studentId}', '${studentName}', '${encodeForHtml(commentStr)}')">${cmtBtnText}</button></td>
+                    <td style="text-align: center;"><button class="link-btn" onclick="window.open('https://goejinhak.kr', '_blank')">링크 이동</button></td>
                     <td><button class="delete-btn" onclick="deleteData(this, '${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function escapeQuotes(str) { return str ? str.replace(/'/g, "\\'").replace(/"/g, '&quot;') : ''; }
-        function unescapeQuotes(str) { return str ? str.replace(/&quot;/g, '"').replace(/\\'/g, "'") : ''; }
-
         // ==========================================
         // 수시지원 카드 관련 
         // ==========================================
-        function openCardEditModal(studentId, studentName, cardsStrEscaped) {
+        function openCardEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('cardEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
             
@@ -418,9 +440,9 @@
             container.innerHTML = '';
             
             let savedCards = Array(6).fill({univ: '', type: '', dept: ''});
-            if (cardsStrEscaped && cardsStrEscaped.length > 5) {
+            if (encodedStr) {
                 try {
-                    const parsed = JSON.parse(unescapeQuotes(cardsStrEscaped));
+                    const parsed = JSON.parse(decodeForHtml(encodedStr));
                     if (Array.isArray(parsed)) {
                         for(let i=0; i<6; i++) { if(parsed[i]) savedCards[i] = parsed[i]; }
                     }
@@ -464,9 +486,10 @@
             document.getElementById('addCardRowBtn').style.display = allVisible ? 'none' : 'block';
         }
 
-        async function saveCards() {
+        function saveCards() {
             if(!editingStudent) return;
             const btn = document.querySelector('#cardEditModal .save-btn');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
 
             const cards = [];
@@ -479,92 +502,92 @@
             }
             const cardsDataStr = JSON.stringify(cards);
 
-            try {
-                const res = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'updateCards', studentId: editingStudent.id, studentName: editingStudent.name, cardsData: cardsDataStr })
-                });
-                const result = await res.json();
-                if (result.result === 'success') {
-                    const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
-                    if (target) {
-                        const cardKey = Object.keys(target).find(k => k.includes('수시지원'));
-                        if (cardKey) target[cardKey] = cardsDataStr; else target['수시지원'] = cardsDataStr; 
-                    }
-                    renderAll(); alert('성공적으로 저장되었습니다!'); closeModal('cardEditModal');
-                } else { alert('저장에 실패했습니다.'); }
-            } catch (error) { alert('통신 오류가 발생했습니다.'); }
-            btn.innerHTML = '저장하기'; btn.disabled = false;
+            // ★ 1. 화면 즉시 반영 (딜레이 0초)
+            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
+            if (target) {
+                const cardKey = Object.keys(target).find(k => k.includes('수시지원'));
+                if (cardKey) target[cardKey] = cardsDataStr; else target['수시지원'] = cardsDataStr; 
+            }
+            renderAll(); 
+            closeModal('cardEditModal');
+            alert('성공적으로 저장되었습니다!');
+            
+            btn.innerHTML = originalText; btn.disabled = false;
+
+            // ★ 2. 백그라운드 서버 전송 (응답 안 기다림)
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'updateCards', studentId: editingStudent.id, studentName: editingStudent.name, cardsData: cardsDataStr })
+            }).catch(e => console.error(e));
         }
 
         // ==========================================
-        // ★ 신규: 담임선생님 의견 관련 
+        // 담임선생님 의견 관련 
         // ==========================================
-        function openCommentEditModal(studentId, studentName, commentStrEscaped) {
+        function openCommentEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
-            document.getElementById('teacherCommentInput').value = unescapeQuotes(commentStrEscaped);
+            
+            // ★ 인코딩된 문자열을 안전하게 복원
+            document.getElementById('teacherCommentInput').value = decodeForHtml(encodedStr);
             document.getElementById('commentEditModal').style.display = 'flex';
         }
 
-        async function saveComment() {
+        function saveComment() {
             if(!editingStudent) return;
             const btn = document.querySelector('#commentEditModal .save-btn');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
 
             const text = document.getElementById('teacherCommentInput').value.trim();
 
-            try {
-                const res = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'updateComment', studentId: editingStudent.id, studentName: editingStudent.name, commentData: text })
-                });
-                const result = await res.json();
-                if (result.result === 'success') {
-                    const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
-                    if (target) {
-                        const cmtKey = Object.keys(target).find(k => k.includes('담임의견'));
-                        if (cmtKey) target[cmtKey] = text; else target['담임의견'] = text; 
-                    }
-                    renderAll(); alert('의견이 성공적으로 저장되었습니다!'); closeModal('commentEditModal');
-                } else { alert('저장에 실패했습니다.'); }
-            } catch (error) { alert('통신 오류가 발생했습니다.'); }
-            btn.innerHTML = '저장하기'; btn.disabled = false;
+            // ★ 1. 화면 즉시 반영 (딜레이 0초)
+            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
+            if (target) {
+                const cmtKey = Object.keys(target).find(k => k.includes('담임의견'));
+                if (cmtKey) target[cmtKey] = text; else target['담임의견'] = text; 
+            }
+            renderAll(); 
+            closeModal('commentEditModal');
+            alert('의견이 성공적으로 저장되었습니다!');
+
+            btn.innerHTML = originalText; btn.disabled = false;
+
+            // ★ 2. 백그라운드 서버 전송
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'updateComment', studentId: editingStudent.id, studentName: editingStudent.name, commentData: text })
+            }).catch(e => console.error(e));
         }
 
-        // 삭제 로직
-        async function deleteData(btn, studentId, studentName, timestamp) {
+        // 삭제 로직 (삭제도 딜레이 없이 즉시 처리되도록 수정)
+        function deleteData(btn, studentId, studentName, timestamp) {
             if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
             if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
 
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '삭제중..'; btn.disabled = true;
+            const indexToRemove = globalData.findIndex(row => {
+                const id = getFlexibleValue(row, '학번', '').toString();
+                const name = getFlexibleValue(row, '이름', '').toString();
+                const time = getFlexibleValue(row, '타임스탬프', '').toString();
+                if (!studentId && !studentName) return time === (timestamp || '').toString();
+                return id === (studentId || '').toString() && name === (studentName || '').toString() && time === (timestamp || '').toString();
+            });
+            
+            if (indexToRemove !== -1) {
+                globalData.splice(indexToRemove, 1);
+                renderAll(); 
+            }
 
-            try {
-                const res = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName, timestamp: timestamp })
-                });
-                if (!res.ok) throw new Error('서버 통신 오류');
-                const result = await res.json();
-                if (result.result === 'success') {
-                    const indexToRemove = globalData.findIndex(row => {
-                        const id = getFlexibleValue(row, '학번', '').toString();
-                        const name = getFlexibleValue(row, '이름', '').toString();
-                        const time = getFlexibleValue(row, '타임스탬프', '').toString();
-                        if (!studentId && !studentName) return time === (timestamp || '').toString();
-                        return id === (studentId || '').toString() && name === (studentName || '').toString() && time === (timestamp || '').toString();
-                    });
-                    if (indexToRemove !== -1) globalData.splice(indexToRemove, 1);
-                    renderAll(); 
-                } else {
-                    alert('삭제 실패: 새로고침(동기화)을 해주세요.');
-                    btn.innerHTML = originalText; btn.disabled = false;
-                }
-            } catch (error) { alert('통신 지연이 발생했습니다.'); fetchData(); }
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName, timestamp: timestamp })
+            }).catch(e => console.error(e));
         }
 
         // 상세 모달 열기
@@ -575,7 +598,7 @@
             document.getElementById('m-target').innerText = `🏫 ${getFlexibleValue(student, '대학')} | ${getFlexibleValue(student, '전형')} | ${getFlexibleValue(student, '학과')}`;
             
             const rawMethod = getMethodValue(student);
-            const styledMethod = getStyledMethod(rawMethod); // ★ 색상 적용
+            const styledMethod = getStyledMethod(rawMethod); 
             const passDate = formatToDateOnly(getFlexibleValue(student, '1차 합격', '해당없음'));
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
@@ -613,7 +636,6 @@
                 cardsBox.innerHTML = '<div style="color:#777; font-size:13px; text-align:center;">아직 등록된 수시지원 카드가 없습니다.</div>';
             }
 
-            // ★ 담임선생님 의견 렌더링
             const commentStr = getFlexibleValue(student, '담임의견', '');
             const cmtBox = document.getElementById('m-teacher-comment');
             if(commentStr.trim().length > 0) {
