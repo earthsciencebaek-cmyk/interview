@@ -71,7 +71,6 @@
         .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,0,0,0.1); border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; color: #d63031; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .modal-item { margin-bottom: 15px; }
         .modal-item span { display: block; font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 4px; }
-        /* 모달 내부 박스 여백 및 줄간격 슬림화 */
         .modal-item div { font-size: 15px; font-weight: 500; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 8px; line-height: 1.4; }
         .loading { text-align: center; font-size: 18px; font-weight: bold; padding: 50px; display: none; }
 
@@ -647,7 +646,7 @@
             }).catch(e => console.error(e));
         }
 
-        // ★ 모달 상세정보 표시 개선 (1차 합격 여부 줄바꿈 방지 및 자연스러운 간격 배치)
+        // ★ 모달 상세정보 표시: 1차 합격 여부 줄바꿈 없이 한 줄로 배치 및 줄간격 최적화
         function openModal(student) {
             document.getElementById('m-name').innerText = getFlexibleValue(student, '학번', '') + ' ' + getFlexibleValue(student, '이름', '');
             document.getElementById('m-info').innerText = `📞 ${getFlexibleValue(student, '전화번호', '-')}`;
@@ -660,9 +659,9 @@
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
             
-            // white-space: nowrap을 주어 '1차 합격 여부:'와 내용이 같은 줄에 바로 오도록 설정하고, gap을 3px로 좁혀 자연스러운 줄간격 배치
-            let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 3px;">`;
-            scheduleHtml += `<div style="white-space: nowrap;">✅ 1차 합격 여부: <span style="font-weight:bold;">${styledMethod}</span></div>`;
+            // white-space: nowrap과 공백(&nbsp;)을 사용하여 줄바꿈 없이 한 줄로 나오도록 수정
+            let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 4px;">`;
+            scheduleHtml += `<div style="white-space: nowrap;">✅ 1차 합격 여부:&nbsp;<span style="font-weight:bold;">${styledMethod}</span></div>`;
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
                 scheduleHtml += `<div style="white-space: nowrap;">🎯 1차 발표일: ${passDate}</div>`; 
             }
