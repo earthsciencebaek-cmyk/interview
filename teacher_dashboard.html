@@ -368,14 +368,15 @@
             attachCustomSelectEvents(document.getElementById('customFilterClass'));
         }
 
-        function fetchData() {
-            const loading = document.getElementById('loading');
-            loading.style.display = 'block';
-            fetch(WEB_APP_URL)
-                .then(res => res.json())
-                .then(data => { globalData = data; populateClassFilter(); loading.style.display = 'none'; renderAll(); })
-                .catch(err => { console.error(err); loading.innerHTML = '데이터를 불러오는 데 실패했습니다.'; });
-        }
+function fetchData() {
+    const loading = document.getElementById('loading');
+    loading.style.display = 'block';
+    // URL 뒤에 현재 시간을 붙여 항상 새로운 데이터를 받아오도록 캐시 방지 처리
+    fetch(WEB_APP_URL + '?t=' + new Date().getTime()) 
+        .then(res => res.json())
+        .then(data => { globalData = data; populateClassFilter(); loading.style.display = 'none'; renderAll(); })
+        .catch(err => { console.error(err); loading.innerHTML = '데이터를 불러오는 데 실패했습니다.'; });
+}
 
         function getFlexibleValue(student, keyword, defaultVal = '') {
             const foundKey = Object.keys(student).find(k => k.includes(keyword));
