@@ -91,31 +91,31 @@
         .status-blue { color: #0984e3; font-weight: bold; }
         .status-red { color: #d63031; font-weight: bold; }
 
-        /* =========================================
-           ★ 추가된 부분: 인쇄 전용 CSS (출석부 출력용)
-           ========================================= */
+        /* 인쇄 전용 CSS (출석부 출력용) */
         #printArea { display: none; }
         
         @media print {
-            /* 기존 배경, 네비게이션, 모달 등 웹 UI 숨김 */
             body { background: none !important; margin: 0; padding: 0; display: block; color: #000; }
             .top-nav, .main-content, .modal-overlay, #loading { display: none !important; }
             
-            /* 인쇄 영역만 활성화 */
             #printArea { display: block !important; width: 100%; }
             
-            /* A4 세로, 여백 설정 */
             @page { size: A4 portrait; margin: 15mm; }
             
             .print-title { text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 25px; }
-            .print-info { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; }
             
-            /* 2단 배치를 위한 6열 테이블 디자인 */
-            .print-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            /* 선택 조건 문구 제거 및 우측 정렬 */
+            .print-info { display: flex; justify-content: flex-end; font-size: 14px; margin-bottom: 10px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; }
+            
+            /* 표 테두리 병합 및 페이지 짤림 방지 속성 추가 */
+            .print-table { width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 13px; }
             .print-table th, .print-table td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle; height: 35px; }
+            .print-table thead { display: table-header-group; background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .print-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             
-            /* 서명란 너비를 넓게 배정 */
+            /* 행이 다음 페이지로 넘어갈 때 반으로 갈라져 선이 사라지는 현상 방지 */
+            .print-table tr { break-inside: avoid; page-break-inside: avoid; }
+            
             .print-col-id { width: 15%; }
             .print-col-name { width: 15%; }
             .print-col-sign { width: 20%; }
@@ -143,6 +143,7 @@
                     <div class="select-items select-hide">
                         <div data-value="all">🗓️ 모든 날짜</div>
                         <div data-value="10월 19일(월)">10월 19일(월)</div>
+                        <!-- ★ 다시 11월 25일로 원복 -->
                         <div data-value="11월 25일(화)">11월 25일(화)</div>
                     </div>
                     <input type="hidden" id="filterDate" value="all">
@@ -159,7 +160,6 @@
                 <button class="filter-pill" id="sortBtn" onclick="toggleSort()" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;">🔃 학번 정렬</button>
                 <button class="filter-pill" onclick="resetFilters()" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c;">🔄 필터 초기화</button>
                 
-                <!-- ★ 추가: 출석부 출력 버튼 -->
                 <button class="filter-pill" onclick="printAttendance()" style="background: rgba(41, 128, 185, 0.2); border-color: #2980b9; color: #2980b9;">🖨️ 출석부 출력</button>
                 
                 <div class="filter-pills" id="trackFilters" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 10px;">
@@ -249,7 +249,7 @@
         </div>
     </div>
 
-    <!-- ★ 추가: 인쇄될 출석부 영역 (평상시에는 보이지 않음) -->
+    <!-- 인쇄될 출석부 영역 (평상시에는 보이지 않음) -->
     <div id="printArea"></div>
 
     <script>
@@ -257,7 +257,7 @@
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxxbO6faOcWLBw1Q__ZwB1MQxhl27GucNdPTmlhT8RBwp0voztxIfHvyrh53d-vbRY/exec';
         
         let globalData = []; 
-        let currentFilteredData = []; // ★ 추가: 현재 필터링된 데이터를 담아둘 전역 변수 (인쇄용)
+        let currentFilteredData = []; 
         let selectedTracks = new Set(['all']);
         let isSortedAsc = false;
         let editingStudent = null; 
@@ -452,7 +452,7 @@
                 });
             }
             
-            currentFilteredData = filteredData; // ★ 추가: 현재 필터링된 배열을 전역에 복사하여 인쇄에 활용
+            currentFilteredData = filteredData; 
             
             const countElement = document.getElementById('studentCount');
             if(countElement) countElement.innerText = `(총 ${filteredData.length}명)`;
@@ -535,7 +535,6 @@
             });
         }
 
-        // 수시지원 카드 관련 
         function openCardEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('cardEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
@@ -625,7 +624,6 @@
             }).catch(e => console.error(e));
         }
 
-        // 담임선생님 의견 관련 
         function openCommentEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
@@ -660,7 +658,6 @@
             }).catch(e => console.error(e));
         }
 
-        // 삭제 로직
         function deleteData(btn, studentId, studentName, timestamp) {
             if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
             if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
@@ -699,11 +696,11 @@
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
             
             let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 4px;">`;
-            scheduleHtml += `<div style="white-space: nowrap;">✅ 1차 합격 여부:&nbsp;<span style="font-weight:bold;">${styledMethod}</span></div>`;
+            scheduleHtml += `<div style="white-space: nowrap; word-break: keep-all;">✅ 1차 합격 여부: <span style="font-weight:bold;">${styledMethod}</span></div>`;
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
-                scheduleHtml += `<div style="white-space: nowrap;">🎯 1차 발표일: ${passDate}</div>`; 
+                scheduleHtml += `<div style="white-space: nowrap; word-break: keep-all;">🎯 1차 발표일: ${passDate}</div>`; 
             }
-            scheduleHtml += `<div style="white-space: nowrap;">🚨 실제 면접일: ${actualDate}</div>`;
+            scheduleHtml += `<div style="white-space: nowrap; word-break: keep-all;">🚨 실제 면접일: ${actualDate}</div>`;
             scheduleHtml += `</div>`;
             
             document.getElementById('m-schedule').innerHTML = scheduleHtml;
@@ -751,25 +748,15 @@
 
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
         
-        // ★ 추가: 출석부 인쇄 함수 (2단 분할 로직 포함)
+        // ★ 출석부 인쇄 (선택 조건 숨김)
         function printAttendance() {
             if (currentFilteredData.length === 0) {
                 alert("출력할 학생 데이터가 없습니다. 필터를 확인해주세요.");
                 return;
             }
 
-            // 현재 선택된 필터 정보 텍스트 가져오기 (타이틀용)
-            const dateFilter = document.querySelector('#customFilterDate .select-selected').innerText;
-            const classFilter = document.querySelector('#customFilterClass .select-selected').innerText;
-            
-            // 현재 선택된 계열 필터 텍스트 가져오기
-            let tracks = [];
-            document.querySelectorAll('#trackFilters .filter-pill.active').forEach(btn => tracks.push(btn.innerText));
-            const trackFilter = tracks.join(', ');
-
             let html = `<div class="print-title">면접 대비반 출석부</div>`;
             html += `<div class="print-info">
-                        <span>선택 조건: ${dateFilter} / ${classFilter} / ${trackFilter}</span>
                         <span>총 인원: ${currentFilteredData.length}명</span>
                      </div>`;
             
@@ -782,7 +769,6 @@
                      </thead>
                      <tbody>`;
             
-            // 전체 인원을 절반으로 나누어 좌/우 2단 배치
             const halfLength = Math.ceil(currentFilteredData.length / 2);
             
             for (let i = 0; i < halfLength; i++) {
@@ -791,18 +777,15 @@
                 
                 html += `<tr>`;
                 
-                // 좌측 단 (1열~3열)
                 html += `<td>${getFlexibleValue(leftStudent, '학번', '')}</td>`;
                 html += `<td>${getFlexibleValue(leftStudent, '이름', '')}</td>`;
-                html += `<td></td>`; // 서명란 공란
+                html += `<td></td>`;
                 
-                // 우측 단 (4열~6열)
                 if (rightStudent) {
                     html += `<td>${getFlexibleValue(rightStudent, '학번', '')}</td>`;
                     html += `<td>${getFlexibleValue(rightStudent, '이름', '')}</td>`;
-                    html += `<td></td>`; // 서명란 공란
+                    html += `<td></td>`; 
                 } else {
-                    // 홀수 인원이라 오른쪽 자리가 남는 경우 빈칸 처리
                     html += `<td></td><td></td><td></td>`;
                 }
                 html += `</tr>`;
@@ -810,7 +793,6 @@
             
             html += `</tbody></table>`;
             
-            // 화면에 반영 후 인쇄 창 띄우기
             document.getElementById('printArea').innerHTML = html;
             window.print();
         }
