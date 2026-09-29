@@ -592,13 +592,13 @@
             let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 12px;">`;
             
             // 고정 너비(120px)를 주어 줄을 깔끔하게 맞추고, 모든 텍스트의 크기와 색상을 제목과 동일하게 통일
-            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 28px;"><span style="width: 120px; font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">✅ 1차 합격 여부:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${rawMethod}</span></div>`;
+            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 24px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">✅ 1차 합격 여부:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${rawMethod}</span></div>`;
             
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
-                scheduleHtml += `<div style="display: flex; align-items: center; min-height: 28px;"><span style="width: 120px; font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🎯 1차 발표일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${passDate}</span></div>`; 
+                scheduleHtml += `<div style="display: flex; align-items: center; min-height: 24px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🎯 1차 발표일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${passDate}</span></div>`; 
             }
             
-            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 28px;"><span style="width: 120px; font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🚨 실제 면접일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${actualDate}</span></div>`;
+            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 24px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🚨 실제 면접일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${actualDate}</span></div>`;
             scheduleHtml += `</div>`;
             
             document.getElementById('m-schedule').innerHTML = scheduleHtml;
