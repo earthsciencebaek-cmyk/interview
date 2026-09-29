@@ -110,13 +110,18 @@
     </style>
 </head>
 <body>
-    <div class="top-nav glass-panel">
-        <h2>🎯 면접 대비반 관리</h2>
-        <button class="tab-btn active" onclick="switchTab('gallery')">📇 참여 학생 정보 카드</button>
-        <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
-        <button class="tab-btn" onclick="window.open('https://goejinhak.kr', '_blank')" style="background: rgba(142, 68, 173, 0.15); border-color: rgba(142, 68, 173, 0.4); color: #8e44ad;">📘 경기도교육청 진학자료집</button>
-        <button class="tab-btn ml-auto" onclick="fetchData()" style="background: rgba(255,255,255,0.2); border: 1px dashed #333;">🔄 서버 동기화</button>
-    </div>
+   <div class="top-nav glass-panel">
+    <h2>🎯 면접 대비반 관리</h2>
+    <button class="tab-btn active" onclick="switchTab('gallery')">📇 참여 학생 정보 카드</button>
+    <button class="tab-btn" onclick="switchTab('table')">📊 전체 데이터 표</button>
+    <button class="tab-btn" onclick="window.open('https://goejinhak.kr', '_blank')" style="background: rgba(142, 68, 173, 0.15); border-color: rgba(142, 68, 173, 0.4); color: #8e44ad;">📘 경기도교육청 진학자료집</button>
+    
+    <!-- 👇 여기에 면접 장소 예약 버튼을 추가했습니다 👇 -->
+    <button class="tab-btn" onclick="window.open('https://docs.google.com/spreadsheets/d/1qA_2Za6sWh0A3-O2EpKPREzt0CdjBR9_U_-T-kvyHII/edit?usp=sharing', '_blank')" style="background: rgba(39, 174, 96, 0.15); border-color: rgba(39, 174, 96, 0.4); color: #27ae60;">🏫 면접 장소 예약</button>
+    <!-- 👆 여기까지 👆 -->
+    
+    <button class="tab-btn ml-auto" onclick="fetchData()" style="background: rgba(255,255,255,0.2); border: 1px dashed #333;">🔄 서버 동기화</button>
+</div>
     
     <div class="main-content glass-panel">
         <div class="header-section">
