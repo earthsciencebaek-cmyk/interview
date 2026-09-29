@@ -596,13 +596,13 @@
             let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">`;
             
             // 고정 너비(120px)를 주어 줄을 깔끔하게 맞춤
-            scheduleHtml += `<div style="display: flex; align-items: center;"><span style="width: 120px; font-weight: bold; color: #2c3e50;">✅ 1차 합격 여부:</span> <span style="font-weight: 800; color: #333;  font-size: 20px;">${styledMethod}</span></div>`;
+            scheduleHtml += `<div style="display: flex; align-items: center;"><span style="width: 120px; font-weight: bold; color: #2c3e50; font-size: 16px;">✅ 1차 합격 여부:</span> <span style="font-weight: 500; color: #333;  font-size: 16px;">${styledMethod}</span></div>`;
             
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
-                scheduleHtml += `<div style="display: flex; align-items: center;"><span style="width: 120px; font-weight: bold; color: #2c3e50;">🎯 1차 발표일:</span> <span style="font-weight: 800; color: #333; font-size: 20px;">${passDate}</span></div>`; 
+                scheduleHtml += `<div style="display: flex; align-items: center;"><span style="width: 120px; font-weight: bold; color: #2c3e50; font-size: 16px;">🎯 1차 발표일:</span> <span style="font-weight: 500; color: #333; font-size: 16px;">${passDate}</span></div>`; 
             }
             
-            scheduleHtml += `<div style="display: flex; align-items: center;"><span style="width: 120px; font-weight: bold; color: #2c3e50;">🚨 실제 면접일:</span> <span style="font-weight: 800; color: #333;  font-size: 20px;">${actualDate}</span></div>`;
+            scheduleHtml += `<div style="display: flex; align-items: center;"><span style="width: 120px; font-weight: bold; color: #2c3e50; font-size: 16px;">🚨 실제 면접일:</span> <span style="font-weight: 500; color: #333;  font-size: 16px;">${actualDate}</span></div>`;
             scheduleHtml += `</div>`;
             
             document.getElementById('m-schedule').innerHTML = scheduleHtml;
