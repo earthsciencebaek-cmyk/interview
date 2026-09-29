@@ -187,7 +187,6 @@
                             <th>목표 대학/전형/학과</th>
                             <th style="min-width:120px;">1차 합격 여부</th>
                             <th>면접일</th>
-                            <!-- ★ 면접 형식 열 추가 -->
                             <th style="text-align: center;">면접 형식</th>
                             <th style="text-align: center;">수시 지원 카드</th>
                             <th style="text-align: center;">담임선생님 의견</th>
@@ -200,15 +199,19 @@
         </div>
     </div>
 
-    <!-- 1. 기존 학생 정보 상세 모달 (전화번호 숨김 처리) -->
+    <!-- 1. 학생 정보 상세 모달 (학번 칸 아예 삭제, 면접 형식 추가) -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('detailModal')">X</button>
             <h2 id="m-name" style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">이름</h2>
-            <!-- ★ '학번 / 전화번호' -> '학번'으로 수정 -->
-            <div class="modal-item"><span>학번</span><div id="m-info"></div></div>
+            
+            <!-- ★ 기존 학번 칸 제거됨 -->
             <div class="modal-item"><span>모의면접 희망 날짜</span><div id="m-date"></div></div>
             <div class="modal-item"><span>연습 목표 전형 정보</span><div id="m-target"></div></div>
+            
+            <!-- ★ 면접 형식 표시란 추가 -->
+            <div class="modal-item"><span>🗣️ 면접 형식</span><div id="m-format" style="background: rgba(116, 185, 255, 0.2); border: 1px solid rgba(9, 132, 227, 0.3);"></div></div>
+            
             <div class="modal-item"><span>1차 합격 여부 / 1차 발표일 / 실제 면접일</span><div id="m-schedule"></div></div>
             <div class="modal-item"><span>💬 솔직한 고민</span><div id="m-concern" style="background: rgba(255,234,167,0.4); min-height: 60px;"></div></div>
             
@@ -247,7 +250,7 @@
         </div>
     </div>
     
-    <!-- ★ 4. 면접 형식 작성 모달 추가 -->
+    <!-- 4. 면접 형식 작성 모달 -->
     <div class="modal-overlay" id="formatEditModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('formatEditModal')">X</button>
@@ -258,7 +261,7 @@
         </div>
     </div>
 
-    <!-- 인쇄될 출석부 영역 (평상시에는 보이지 않음) -->
+    <!-- 인쇄될 출석부 영역 -->
     <div id="printArea"></div>
 
     <script>
@@ -271,10 +274,8 @@
         let isSortedAsc = false;
         let editingStudent = null; 
         
-        // ★ 테이블 비밀번호 잠금 해제 상태 변수
         let isTableUnlocked = false;
 
-        // 비밀번호 확인 로직
         function checkPassword() {
             const pwd = document.getElementById('tablePassword').value;
             if(pwd === '20263') {
@@ -287,11 +288,8 @@
             }
         }
 
-        // 커스텀 드롭다운 JS 제어
         function initCustomSelects() {
-            document.querySelectorAll('.custom-select').forEach(el => {
-                attachCustomSelectEvents(el);
-            });
+            document.querySelectorAll('.custom-select').forEach(el => { attachCustomSelectEvents(el); });
         }
 
         function attachCustomSelectEvents(customSelectEl) {
@@ -397,7 +395,6 @@
         function fetchData() {
             const loading = document.getElementById('loading');
             loading.style.display = 'block';
-            // ★ 캐시 방지를 위해 현재 시간을 URL 뒤에 파라미터로 붙여 항상 새 데이터를 불러옵니다.
             fetch(WEB_APP_URL + '?t=' + new Date().getTime())
                 .then(res => res.json())
                 .then(data => { globalData = data; populateClassFilter(); loading.style.display = 'none'; renderAll(); })
@@ -426,7 +423,7 @@
         function getStyledMethod(methodStr) {
             if (methodStr.includes('없이 바로')) return `<span class="status-blue">${methodStr}</span>`;
             else if (methodStr.includes('발표 후')) return `<span class="status-red">${methodStr}</span>`;
-            return methodStr;
+            return `<span>${methodStr}</span>`;
         }
 
         function formatToDateOnly(dateString) {
@@ -544,7 +541,6 @@
                 const cmtBtnText = hasComment ? '수정' : '등록';
                 const cmtBtnClass = hasComment ? 'edit-btn' : 'cmt-btn';
 
-                // ★ 면접 형식 데이터 파싱 및 버튼 설정
                 const formatStr = getFlexibleValue(student, '면접형식', '');
                 const hasFormat = formatStr && formatStr.trim().length > 0;
                 const fmtBtnText = hasFormat ? '수정' : '등록';
@@ -568,214 +564,40 @@
             });
         }
 
-        // 수시지원 카드 관련 모달
-        function openCardEditModal(studentId, studentName, encodedStr) {
-            editingStudent = { id: studentId, name: studentName };
-            document.getElementById('cardEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
-            
-            const container = document.getElementById('cardInputContainer');
-            container.innerHTML = '';
-            
-            let savedCards = Array(6).fill({univ: '', type: '', dept: ''});
-            if (encodedStr) {
-                try {
-                    const parsed = JSON.parse(decodeForHtml(encodedStr));
-                    if (Array.isArray(parsed)) {
-                        for(let i=0; i<6; i++) { if(parsed[i]) savedCards[i] = parsed[i]; }
-                    }
-                } catch(e) {}
-            }
-
-            for (let i = 0; i < 6; i++) {
-                const hasData = savedCards[i].univ || savedCards[i].type || savedCards[i].dept;
-                const displayStyle = (i === 0 || hasData) ? 'flex' : 'none';
-                container.innerHTML += `
-                    <div class="edit-row" id="cardRow_${i}" style="display: ${displayStyle};">
-                        <span>${i+1}번</span>
-                        <input type="text" id="c_u_${i}" placeholder="대학명" value="${savedCards[i].univ}">
-                        <input type="text" id="c_t_${i}" placeholder="전형명" value="${savedCards[i].type}">
-                        <input type="text" id="c_d_${i}" placeholder="학과명" value="${savedCards[i].dept}">
-                    </div>
-                `;
-            }
-            checkAddButtonVisibility(); 
-            document.getElementById('cardEditModal').style.display = 'flex';
-        }
-
-        function addCardRow() {
-            for (let i = 1; i < 6; i++) {
-                const row = document.getElementById(`cardRow_${i}`);
-                if (row.style.display === 'none') {
-                    row.style.display = 'flex';
-                    break; 
-                }
-            }
-            checkAddButtonVisibility();
-        }
-
-        function checkAddButtonVisibility() {
-            let allVisible = true;
-            for (let i = 0; i < 6; i++) {
-                if (document.getElementById(`cardRow_${i}`).style.display === 'none') {
-                    allVisible = false; break;
-                }
-            }
-            document.getElementById('addCardRowBtn').style.display = allVisible ? 'none' : 'block';
-        }
-
-        function saveCards() {
-            if(!editingStudent) return;
-            const btn = document.querySelector('#cardEditModal .save-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
-
-            const cards = [];
-            for (let i = 0; i < 6; i++) {
-                cards.push({
-                    univ: document.getElementById(`c_u_${i}`).value.trim(),
-                    type: document.getElementById(`c_t_${i}`).value.trim(),
-                    dept: document.getElementById(`c_d_${i}`).value.trim()
-                });
-            }
-            const cardsDataStr = JSON.stringify(cards);
-
-            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
-            if (target) {
-                const cardKey = Object.keys(target).find(k => k.includes('수시지원'));
-                if (cardKey) target[cardKey] = cardsDataStr; else target['수시지원'] = cardsDataStr; 
-            }
-            renderAll(); 
-            closeModal('cardEditModal');
-            alert('성공적으로 저장되었습니다!');
-            
-            btn.innerHTML = originalText; btn.disabled = false;
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'updateCards', studentId: editingStudent.id, studentName: editingStudent.name, cardsData: cardsDataStr })
-            }).catch(e => console.error(e));
-        }
-
-        // 담임선생님 의견 관련
-        function openCommentEditModal(studentId, studentName, encodedStr) {
-            editingStudent = { id: studentId, name: studentName };
-            document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
-            document.getElementById('teacherCommentInput').value = decodeForHtml(encodedStr);
-            document.getElementById('commentEditModal').style.display = 'flex';
-        }
-
-        function saveComment() {
-            if(!editingStudent) return;
-            const btn = document.querySelector('#commentEditModal .save-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
-
-            const text = document.getElementById('teacherCommentInput').value.trim();
-
-            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
-            if (target) {
-                const cmtKey = Object.keys(target).find(k => k.includes('담임의견'));
-                if (cmtKey) target[cmtKey] = text; else target['담임의견'] = text; 
-            }
-            renderAll(); 
-            closeModal('commentEditModal');
-            alert('의견이 성공적으로 저장되었습니다!');
-
-            btn.innerHTML = originalText; btn.disabled = false;
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'updateComment', studentId: editingStudent.id, studentName: editingStudent.name, commentData: text })
-            }).catch(e => console.error(e));
-        }
-
-        // ★ 면접 형식 등록 관련 기능 추가
-        function openFormatEditModal(studentId, studentName, encodedStr) {
-            editingStudent = { id: studentId, name: studentName };
-            document.getElementById('formatEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
-            document.getElementById('interviewFormatInput').value = decodeForHtml(encodedStr);
-            document.getElementById('formatEditModal').style.display = 'flex';
-        }
-
-        function saveFormat() {
-            if(!editingStudent) return;
-            const btn = document.querySelector('#formatEditModal .save-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
-
-            const text = document.getElementById('interviewFormatInput').value.trim();
-
-            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
-            if (target) {
-                const fKey = Object.keys(target).find(k => k.includes('면접형식'));
-                if (fKey) target[fKey] = text; else target['면접형식'] = text; 
-            }
-            renderAll(); 
-            closeModal('formatEditModal');
-            alert('면접 형식이 성공적으로 저장되었습니다!');
-
-            btn.innerHTML = originalText; btn.disabled = false;
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'updateFormat', studentId: editingStudent.id, studentName: editingStudent.name, formatData: text })
-            }).catch(e => console.error(e));
-        }
-
-        // 삭제 로직
-        function deleteData(btn, studentId, studentName, timestamp) {
-            if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
-            if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
-
-            const indexToRemove = globalData.findIndex(row => {
-                const id = getFlexibleValue(row, '학번', '').toString();
-                const name = getFlexibleValue(row, '이름', '').toString();
-                const time = getFlexibleValue(row, '타임스탬프', '').toString();
-                if (!studentId && !studentName) return time === (timestamp || '').toString();
-                return id === (studentId || '').toString() && name === (studentName || '').toString() && time === (timestamp || '').toString();
-            });
-            
-            if (indexToRemove !== -1) {
-                globalData.splice(indexToRemove, 1);
-                renderAll(); 
-            }
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName, timestamp: timestamp })
-            }).catch(e => console.error(e));
-        }
-
-        // 모달창 오픈 (전화번호 숨김 처리 반영)
+        // 모달창 오픈 (전화번호/학번 칸 완전 제거 및 가로 한 줄 유지)
         function openModal(student) {
+            // 이름 옆에 학번 표시
             document.getElementById('m-name').innerText = getFlexibleValue(student, '학번', '') + ' ' + getFlexibleValue(student, '이름', '');
-            
-            // ★ 전화번호 노출 제거, 학번만 표시하도록 수정
-            document.getElementById('m-info').innerText = `🎓 ${getFlexibleValue(student, '학번', '-')}`;
             
             document.getElementById('m-date').innerText = `📌 ${getFlexibleValue(student, '날짜', '-')}`;
             document.getElementById('m-target').innerText = `🏫 ${getFlexibleValue(student, '대학')} | ${getFlexibleValue(student, '전형')} | ${getFlexibleValue(student, '학과')}`;
             
-            const rawMethod = getMethodValue(student);
+            // ★ 면접 형식 데이터 표시
+            const formatStr = getFlexibleValue(student, '면접형식', '');
+            const formatBox = document.getElementById('m-format');
+            if(formatStr.trim().length > 0) {
+                formatBox.innerText = formatStr;
+                formatBox.style.color = '#2c3e50';
+            } else {
+                formatBox.innerText = '미입력 (전체 데이터 표 탭에서 면접 형식을 등록해주세요)';
+                formatBox.style.color = '#7f8c8d';
+            }
+            
+            // ★ 데이터 내부의 줄바꿈 문자를 없애고 가로로 강제 정렬
+            const rawMethod = getMethodValue(student).replace(/\n/g, ' ').trim();
             const styledMethod = getStyledMethod(rawMethod); 
             const passDate = formatToDateOnly(getFlexibleValue(student, '1차 합격', '해당없음'));
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
             const concern = getFlexibleValue(student, '고민', '입력된 내용이 없습니다.');
             
-            let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 4px;">`;
-            scheduleHtml += `<div style="white-space: nowrap; word-break: keep-all;">✅ 1차 합격 여부: <span style="font-weight:bold;">${styledMethod}</span></div>`;
+            let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+            
+            // Flex box를 사용하여 어떠한 경우에도 가로로 한 줄에 나오도록 설정
+            scheduleHtml += `<div style="display: flex; align-items: center; white-space: nowrap;">✅ 1차 합격 여부: <span style="font-weight:bold; margin-left: 6px;">${styledMethod}</span></div>`;
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
-                scheduleHtml += `<div style="white-space: nowrap; word-break: keep-all;">🎯 1차 발표일: ${passDate}</div>`; 
+                scheduleHtml += `<div style="display: flex; align-items: center; white-space: nowrap;">🎯 1차 발표일: <span style="margin-left: 6px;">${passDate}</span></div>`; 
             }
-            scheduleHtml += `<div style="white-space: nowrap; word-break: keep-all;">🚨 실제 면접일: ${actualDate}</div>`;
+            scheduleHtml += `<div style="display: flex; align-items: center; white-space: nowrap;">🚨 실제 면접일: <span style="margin-left: 6px;">${actualDate}</span></div>`;
             scheduleHtml += `</div>`;
             
             document.getElementById('m-schedule').innerHTML = scheduleHtml;
@@ -823,58 +645,181 @@
 
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
         
-        // 출석부 인쇄 
+        function openCardEditModal(studentId, studentName, encodedStr) {
+            editingStudent = { id: studentId, name: studentName };
+            document.getElementById('cardEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
+            const container = document.getElementById('cardInputContainer');
+            container.innerHTML = '';
+            
+            let savedCards = Array(6).fill({univ: '', type: '', dept: ''});
+            if (encodedStr) {
+                try {
+                    const parsed = JSON.parse(decodeForHtml(encodedStr));
+                    if (Array.isArray(parsed)) {
+                        for(let i=0; i<6; i++) { if(parsed[i]) savedCards[i] = parsed[i]; }
+                    }
+                } catch(e) {}
+            }
+
+            for (let i = 0; i < 6; i++) {
+                const hasData = savedCards[i].univ || savedCards[i].type || savedCards[i].dept;
+                const displayStyle = (i === 0 || hasData) ? 'flex' : 'none';
+                container.innerHTML += `
+                    <div class="edit-row" id="cardRow_${i}" style="display: ${displayStyle};">
+                        <span>${i+1}번</span>
+                        <input type="text" id="c_u_${i}" placeholder="대학명" value="${savedCards[i].univ}">
+                        <input type="text" id="c_t_${i}" placeholder="전형명" value="${savedCards[i].type}">
+                        <input type="text" id="c_d_${i}" placeholder="학과명" value="${savedCards[i].dept}">
+                    </div>
+                `;
+            }
+            checkAddButtonVisibility(); 
+            document.getElementById('cardEditModal').style.display = 'flex';
+        }
+
+        function addCardRow() {
+            for (let i = 1; i < 6; i++) {
+                const row = document.getElementById(`cardRow_${i}`);
+                if (row.style.display === 'none') { row.style.display = 'flex'; break; }
+            }
+            checkAddButtonVisibility();
+        }
+
+        function checkAddButtonVisibility() {
+            let allVisible = true;
+            for (let i = 0; i < 6; i++) {
+                if (document.getElementById(`cardRow_${i}`).style.display === 'none') { allVisible = false; break; }
+            }
+            document.getElementById('addCardRowBtn').style.display = allVisible ? 'none' : 'block';
+        }
+
+        function saveCards() {
+            if(!editingStudent) return;
+            const btn = document.querySelector('#cardEditModal .save-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
+
+            const cards = [];
+            for (let i = 0; i < 6; i++) {
+                cards.push({
+                    univ: document.getElementById(`c_u_${i}`).value.trim(),
+                    type: document.getElementById(`c_t_${i}`).value.trim(),
+                    dept: document.getElementById(`c_d_${i}`).value.trim()
+                });
+            }
+            const cardsDataStr = JSON.stringify(cards);
+
+            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
+            if (target) {
+                const cardKey = Object.keys(target).find(k => k.includes('수시지원'));
+                if (cardKey) target[cardKey] = cardsDataStr; else target['수시지원'] = cardsDataStr; 
+            }
+            renderAll(); 
+            closeModal('cardEditModal');
+            alert('성공적으로 저장되었습니다!');
+            btn.innerHTML = originalText; btn.disabled = false;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'updateCards', studentId: editingStudent.id, studentName: editingStudent.name, cardsData: cardsDataStr })
+            }).catch(e => console.error(e));
+        }
+
+        function openCommentEditModal(studentId, studentName, encodedStr) {
+            editingStudent = { id: studentId, name: studentName };
+            document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
+            document.getElementById('teacherCommentInput').value = decodeForHtml(encodedStr);
+            document.getElementById('commentEditModal').style.display = 'flex';
+        }
+
+        function saveComment() {
+            if(!editingStudent) return;
+            const btn = document.querySelector('#commentEditModal .save-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
+            const text = document.getElementById('teacherCommentInput').value.trim();
+            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
+            if (target) {
+                const cmtKey = Object.keys(target).find(k => k.includes('담임의견'));
+                if (cmtKey) target[cmtKey] = text; else target['담임의견'] = text; 
+            }
+            renderAll(); 
+            closeModal('commentEditModal');
+            alert('의견이 성공적으로 저장되었습니다!');
+            btn.innerHTML = originalText; btn.disabled = false;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'updateComment', studentId: editingStudent.id, studentName: editingStudent.name, commentData: text })
+            }).catch(e => console.error(e));
+        }
+
+        function openFormatEditModal(studentId, studentName, encodedStr) {
+            editingStudent = { id: studentId, name: studentName };
+            document.getElementById('formatEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
+            document.getElementById('interviewFormatInput').value = decodeForHtml(encodedStr);
+            document.getElementById('formatEditModal').style.display = 'flex';
+        }
+
+        function saveFormat() {
+            if(!editingStudent) return;
+            const btn = document.querySelector('#formatEditModal .save-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
+            const text = document.getElementById('interviewFormatInput').value.trim();
+            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
+            if (target) {
+                const fKey = Object.keys(target).find(k => k.includes('면접형식'));
+                if (fKey) target[fKey] = text; else target['면접형식'] = text; 
+            }
+            renderAll(); 
+            closeModal('formatEditModal');
+            alert('면접 형식이 성공적으로 저장되었습니다!');
+            btn.innerHTML = originalText; btn.disabled = false;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'updateFormat', studentId: editingStudent.id, studentName: editingStudent.name, formatData: text })
+            }).catch(e => console.error(e));
+        }
+
+        function deleteData(btn, studentId, studentName, timestamp) {
+            if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
+            if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
+            const indexToRemove = globalData.findIndex(row => {
+                const id = getFlexibleValue(row, '학번', '').toString();
+                const name = getFlexibleValue(row, '이름', '').toString();
+                const time = getFlexibleValue(row, '타임스탬프', '').toString();
+                if (!studentId && !studentName) return time === (timestamp || '').toString();
+                return id === (studentId || '').toString() && name === (studentName || '').toString() && time === (timestamp || '').toString();
+            });
+            if (indexToRemove !== -1) {
+                globalData.splice(indexToRemove, 1);
+                renderAll(); 
+            }
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'delete', studentId: studentId, studentName: studentName, timestamp: timestamp })
+            }).catch(e => console.error(e));
+        }
+
         function printAttendance() {
-            if (currentFilteredData.length === 0) {
-                alert("출력할 학생 데이터가 없습니다. 필터를 확인해주세요.");
-                return;
-            }
-
-            let dateFilterText = document.querySelector('#customFilterDate .select-selected').innerText;
-            dateFilterText = dateFilterText.replace('🗓️ ', '');
-            if (dateFilterText === '모든 날짜') {
-                dateFilterText = '전체 기간';
-            }
-
+            if (currentFilteredData.length === 0) { alert("출력할 학생 데이터가 없습니다. 필터를 확인해주세요."); return; }
+            let dateFilterText = document.querySelector('#customFilterDate .select-selected').innerText.replace('🗓️ ', '');
+            if (dateFilterText === '모든 날짜') dateFilterText = '전체 기간';
             let html = `<div class="print-title">면접 대비반 출석부</div>`;
-            html += `<div class="print-info">
-                        <span>면접 날짜: ${dateFilterText}</span>
-                        <span>총 인원: ${currentFilteredData.length}명</span>
-                     </div>`;
-            
-            html += `<table class="print-table">`;
-            html += `<thead>
-                        <tr>
-                            <th class="print-col-id">학번</th><th class="print-col-name">이름</th><th class="print-col-sign">서명</th>
-                            <th class="print-col-id">학번</th><th class="print-col-name">이름</th><th class="print-col-sign">서명</th>
-                        </tr>
-                     </thead>
-                     <tbody>`;
-            
+            html += `<div class="print-info"><span>면접 날짜: ${dateFilterText}</span><span>총 인원: ${currentFilteredData.length}명</span></div>`;
+            html += `<table class="print-table"><thead><tr><th class="print-col-id">학번</th><th class="print-col-name">이름</th><th class="print-col-sign">서명</th><th class="print-col-id">학번</th><th class="print-col-name">이름</th><th class="print-col-sign">서명</th></tr></thead><tbody>`;
             const halfLength = Math.ceil(currentFilteredData.length / 2);
-            
             for (let i = 0; i < halfLength; i++) {
                 const leftStudent = currentFilteredData[i];
                 const rightStudent = currentFilteredData[i + halfLength];
-                
-                html += `<tr>`;
-                
-                html += `<td>${getFlexibleValue(leftStudent, '학번', '')}</td>`;
-                html += `<td>${getFlexibleValue(leftStudent, '이름', '')}</td>`;
-                html += `<td></td>`;
-                
-                if (rightStudent) {
-                    html += `<td>${getFlexibleValue(rightStudent, '학번', '')}</td>`;
-                    html += `<td>${getFlexibleValue(rightStudent, '이름', '')}</td>`;
-                    html += `<td></td>`; 
-                } else {
-                    html += `<td></td><td></td><td></td>`;
-                }
+                html += `<tr><td>${getFlexibleValue(leftStudent, '학번', '')}</td><td>${getFlexibleValue(leftStudent, '이름', '')}</td><td></td>`;
+                if (rightStudent) { html += `<td>${getFlexibleValue(rightStudent, '학번', '')}</td><td>${getFlexibleValue(rightStudent, '이름', '')}</td><td></td>`; } 
+                else { html += `<td></td><td></td><td></td>`; }
                 html += `</tr>`;
             }
-            
             html += `</tbody></table>`;
-            
             document.getElementById('printArea').innerHTML = html;
             window.print();
         }
@@ -882,14 +827,9 @@
         document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target === this) closeModal('detailModal'); });
         document.getElementById('cardEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('cardEditModal'); });
         document.getElementById('commentEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('commentEditModal'); });
-        
-        // ★ 면접 형식 모달 배경 클릭 시 닫기 추가
         document.getElementById('formatEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('formatEditModal'); });
         
-        window.onload = () => {
-            initCustomSelects();
-            fetchData();
-        };
+        window.onload = () => { initCustomSelects(); fetchData(); };
     </script>
 </body>
 </html>
