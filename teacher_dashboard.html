@@ -20,7 +20,7 @@
         .title-container { display: flex; align-items: center; gap: 10px; }
         .filter-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         
-        /* 커스텀 드롭다운 (글래스모피즘) 스타일 */
+        /* 커스텀 드롭다운 스타일 */
         .custom-select { position: relative; display: inline-block; font-weight: bold; height: 40px; min-width: 130px; }
         .select-selected { background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 8px; padding: 8px 30px 8px 12px; cursor: pointer; height: 100%; box-sizing: border-box; display: flex; align-items: center; color: #2c3e50; user-select: none; position: relative; transition: all 0.2s; white-space: nowrap; }
         .select-selected::after { content: "▼"; position: absolute; right: 12px; font-size: 10px; color: #2c3e50; transition: transform 0.3s; }
@@ -63,9 +63,6 @@
         .cmt-btn { background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .cmt-btn:hover { background-color: #d35400; }
         
-        .link-btn { background-color: #8e44ad; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .link-btn:hover { background-color: #9b59b6; }
-
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; overflow-y: auto; padding: 20px; }
         .modal-content { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border-radius: 20px; padding: 30px; width: 100%; max-width: 550px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; margin: auto; }
         .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,0,0,0.1); border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; color: #d63031; cursor: pointer; display: flex; justify-content: center; align-items: center; }
@@ -91,31 +88,21 @@
         .status-blue { color: #0984e3; font-weight: bold; }
         .status-red { color: #d63031; font-weight: bold; }
 
-        /* 인쇄 전용 CSS (출석부 출력용) */
+        /* 인쇄 전용 CSS */
         #printArea { display: none; }
         
         @media print {
             body { background: none !important; margin: 0; padding: 0; display: block; color: #000; }
             .top-nav, .main-content, .modal-overlay, #loading { display: none !important; }
-            
             #printArea { display: block !important; width: 100%; }
-            
             @page { size: A4 portrait; margin: 15mm; }
-            
             .print-title { text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 25px; }
-            
-            /* ★ 양쪽 정렬(space-between) 적용: 날짜는 왼쪽, 인원은 오른쪽에 배치되도록 변경 */
             .print-info { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; }
-            
-            /* 표 테두리 병합 및 페이지 짤림 방지 속성 추가 */
             .print-table { width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 13px; }
             .print-table th, .print-table td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle; height: 35px; }
             .print-table thead { display: table-header-group; background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .print-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            
-            /* 행이 다음 페이지로 넘어갈 때 반으로 갈라져 선이 사라지는 현상 방지 */
             .print-table tr { break-inside: avoid; page-break-inside: avoid; }
-            
             .print-col-id { width: 15%; }
             .print-col-name { width: 15%; }
             .print-col-sign { width: 20%; }
@@ -179,8 +166,17 @@
         <div id="gallery-tab" class="tab-content active">
             <div class="gallery-grid" id="galleryContainer"></div>
         </div>
+        
+        <!-- 전체 데이터 표 탭 (비밀번호 잠금 처리) -->
         <div id="table-tab" class="tab-content">
-            <div class="table-container">
+            <div id="passwordSection" class="glass-panel" style="text-align: center; padding: 60px 20px; margin-top: 20px;">
+                <h3 style="margin-bottom: 20px; font-size: 20px;">🔒 열람을 위해 비밀번호를 입력해주세요</h3>
+                <input type="password" id="tablePassword" class="search-input" placeholder="비밀번호 입력" style="text-align: center; width: 220px; margin-bottom: 15px;" onkeypress="if(event.keyCode==13) checkPassword()">
+                <br>
+                <button class="save-btn" style="width: 220px; margin-top: 0; padding: 10px;" onclick="checkPassword()">확인</button>
+            </div>
+            
+            <div class="table-container" id="protectedTableSection" style="display: none;">
                 <table>
                     <thead>
                         <tr>
@@ -191,6 +187,8 @@
                             <th>목표 대학/전형/학과</th>
                             <th style="min-width:120px;">1차 합격 여부</th>
                             <th>면접일</th>
+                            <!-- ★ 면접 형식 열 추가 -->
+                            <th style="text-align: center;">면접 형식</th>
                             <th style="text-align: center;">수시 지원 카드</th>
                             <th style="text-align: center;">담임선생님 의견</th>
                             <th>관리</th>
@@ -202,12 +200,13 @@
         </div>
     </div>
 
-    <!-- 1. 기존 학생 정보 상세 모달 -->
+    <!-- 1. 기존 학생 정보 상세 모달 (전화번호 숨김 처리) -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('detailModal')">X</button>
             <h2 id="m-name" style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">이름</h2>
-            <div class="modal-item"><span>학번 / 전화번호</span><div id="m-info"></div></div>
+            <!-- ★ '학번 / 전화번호' -> '학번'으로 수정 -->
+            <div class="modal-item"><span>학번</span><div id="m-info"></div></div>
             <div class="modal-item"><span>모의면접 희망 날짜</span><div id="m-date"></div></div>
             <div class="modal-item"><span>연습 목표 전형 정보</span><div id="m-target"></div></div>
             <div class="modal-item"><span>1차 합격 여부 / 1차 발표일 / 실제 면접일</span><div id="m-schedule"></div></div>
@@ -247,6 +246,17 @@
             <button class="save-btn" onclick="saveComment()">저장하기</button>
         </div>
     </div>
+    
+    <!-- ★ 4. 면접 형식 작성 모달 추가 -->
+    <div class="modal-overlay" id="formatEditModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('formatEditModal')">X</button>
+            <h2 style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">🗣️ 면접 형식 등록</h2>
+            <p id="formatEditTargetName" style="font-weight: bold; color: #0984e3; margin-bottom: 15px;"></p>
+            <input type="text" id="interviewFormatInput" placeholder="ex. 제시문 기반면접, 생기부 기반 면접 등" style="width:100%; padding:15px; border-radius:10px; border:1px solid #ccc; font-family:inherit; font-size:14px; box-sizing:border-box;">
+            <button class="save-btn" onclick="saveFormat()">저장하기</button>
+        </div>
+    </div>
 
     <!-- 인쇄될 출석부 영역 (평상시에는 보이지 않음) -->
     <div id="printArea"></div>
@@ -260,6 +270,22 @@
         let selectedTracks = new Set(['all']);
         let isSortedAsc = false;
         let editingStudent = null; 
+        
+        // ★ 테이블 비밀번호 잠금 해제 상태 변수
+        let isTableUnlocked = false;
+
+        // 비밀번호 확인 로직
+        function checkPassword() {
+            const pwd = document.getElementById('tablePassword').value;
+            if(pwd === '20263') {
+                isTableUnlocked = true;
+                document.getElementById('passwordSection').style.display = 'none';
+                document.getElementById('protectedTableSection').style.display = 'block';
+            } else {
+                alert('비밀번호가 일치하지 않습니다.');
+                document.getElementById('tablePassword').value = '';
+            }
+        }
 
         // 커스텀 드롭다운 JS 제어
         function initCustomSelects() {
@@ -368,15 +394,15 @@
             attachCustomSelectEvents(document.getElementById('customFilterClass'));
         }
 
-function fetchData() {
-    const loading = document.getElementById('loading');
-    loading.style.display = 'block';
-    // URL 뒤에 현재 시간을 붙여 항상 새로운 데이터를 받아오도록 캐시 방지 처리
-    fetch(WEB_APP_URL + '?t=' + new Date().getTime()) 
-        .then(res => res.json())
-        .then(data => { globalData = data; populateClassFilter(); loading.style.display = 'none'; renderAll(); })
-        .catch(err => { console.error(err); loading.innerHTML = '데이터를 불러오는 데 실패했습니다.'; });
-}
+        function fetchData() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            // ★ 캐시 방지를 위해 현재 시간을 URL 뒤에 파라미터로 붙여 항상 새 데이터를 불러옵니다.
+            fetch(WEB_APP_URL + '?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => { globalData = data; populateClassFilter(); loading.style.display = 'none'; renderAll(); })
+                .catch(err => { console.error(err); loading.innerHTML = '데이터를 불러오는 데 실패했습니다.'; });
+        }
 
         function getFlexibleValue(student, keyword, defaultVal = '') {
             const foundKey = Object.keys(student).find(k => k.includes(keyword));
@@ -518,6 +544,12 @@ function fetchData() {
                 const cmtBtnText = hasComment ? '수정' : '등록';
                 const cmtBtnClass = hasComment ? 'edit-btn' : 'cmt-btn';
 
+                // ★ 면접 형식 데이터 파싱 및 버튼 설정
+                const formatStr = getFlexibleValue(student, '면접형식', '');
+                const hasFormat = formatStr && formatStr.trim().length > 0;
+                const fmtBtnText = hasFormat ? '수정' : '등록';
+                const fmtBtnClass = hasFormat ? 'edit-btn' : 'reg-btn';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>${getFlexibleValue(student, '날짜', '-')}</b></td>
@@ -527,6 +559,7 @@ function fetchData() {
                     <td>${getFlexibleValue(student, '대학')} / ${getFlexibleValue(student, '전형')} / ${getFlexibleValue(student, '학과')}</td>
                     <td>${styledMethod}</td>
                     <td>${actualDate}</td>
+                    <td style="text-align: center;"><button class="${fmtBtnClass}" onclick="openFormatEditModal('${studentId}', '${studentName}', '${encodeForHtml(formatStr)}')">${fmtBtnText}</button></td>
                     <td style="text-align: center;"><button class="${cardBtnClass}" onclick="openCardEditModal('${studentId}', '${studentName}', '${encodeForHtml(cardsStr)}')">${cardBtnText}</button></td>
                     <td style="text-align: center;"><button class="${cmtBtnClass}" onclick="openCommentEditModal('${studentId}', '${studentName}', '${encodeForHtml(commentStr)}')">${cmtBtnText}</button></td>
                     <td><button class="delete-btn" onclick="deleteData(this, '${studentId}', '${studentName}', '${timestamp}')">삭제</button></td>
@@ -535,6 +568,7 @@ function fetchData() {
             });
         }
 
+        // 수시지원 카드 관련 모달
         function openCardEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('cardEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
@@ -624,6 +658,7 @@ function fetchData() {
             }).catch(e => console.error(e));
         }
 
+        // 담임선생님 의견 관련
         function openCommentEditModal(studentId, studentName, encodedStr) {
             editingStudent = { id: studentId, name: studentName };
             document.getElementById('commentEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
@@ -658,6 +693,42 @@ function fetchData() {
             }).catch(e => console.error(e));
         }
 
+        // ★ 면접 형식 등록 관련 기능 추가
+        function openFormatEditModal(studentId, studentName, encodedStr) {
+            editingStudent = { id: studentId, name: studentName };
+            document.getElementById('formatEditTargetName').innerText = `[${studentId} ${studentName}] 학생`;
+            document.getElementById('interviewFormatInput').value = decodeForHtml(encodedStr);
+            document.getElementById('formatEditModal').style.display = 'flex';
+        }
+
+        function saveFormat() {
+            if(!editingStudent) return;
+            const btn = document.querySelector('#formatEditModal .save-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '저장 중... ⏳'; btn.disabled = true;
+
+            const text = document.getElementById('interviewFormatInput').value.trim();
+
+            const target = globalData.find(r => getFlexibleValue(r, '학번','').toString() === editingStudent.id && getFlexibleValue(r, '이름','').toString() === editingStudent.name);
+            if (target) {
+                const fKey = Object.keys(target).find(k => k.includes('면접형식'));
+                if (fKey) target[fKey] = text; else target['면접형식'] = text; 
+            }
+            renderAll(); 
+            closeModal('formatEditModal');
+            alert('면접 형식이 성공적으로 저장되었습니다!');
+
+            btn.innerHTML = originalText; btn.disabled = false;
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'updateFormat', studentId: editingStudent.id, studentName: editingStudent.name, formatData: text })
+            }).catch(e => console.error(e));
+        }
+
+        // 삭제 로직
         function deleteData(btn, studentId, studentName, timestamp) {
             if (!studentId && !studentName && !timestamp) { alert('삭제할 수 없습니다. (데이터 누락)'); return; }
             if (!confirm(`[${studentId} ${studentName}] 학생 데이터를 정말 삭제하시겠습니까?`)) return;
@@ -683,9 +754,13 @@ function fetchData() {
             }).catch(e => console.error(e));
         }
 
+        // 모달창 오픈 (전화번호 숨김 처리 반영)
         function openModal(student) {
             document.getElementById('m-name').innerText = getFlexibleValue(student, '학번', '') + ' ' + getFlexibleValue(student, '이름', '');
-            document.getElementById('m-info').innerText = `📞 ${getFlexibleValue(student, '전화번호', '-')}`;
+            
+            // ★ 전화번호 노출 제거, 학번만 표시하도록 수정
+            document.getElementById('m-info').innerText = `🎓 ${getFlexibleValue(student, '학번', '-')}`;
+            
             document.getElementById('m-date').innerText = `📌 ${getFlexibleValue(student, '날짜', '-')}`;
             document.getElementById('m-target').innerText = `🏫 ${getFlexibleValue(student, '대학')} | ${getFlexibleValue(student, '전형')} | ${getFlexibleValue(student, '학과')}`;
             
@@ -748,14 +823,13 @@ function fetchData() {
 
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
         
-        // ★ 출석부 인쇄 (날짜는 좌측, 인원은 우측 표기)
+        // 출석부 인쇄 
         function printAttendance() {
             if (currentFilteredData.length === 0) {
                 alert("출력할 학생 데이터가 없습니다. 필터를 확인해주세요.");
                 return;
             }
 
-            // 현재 선택된 날짜 텍스트를 가져와서 이모지를 지워줍니다.
             let dateFilterText = document.querySelector('#customFilterDate .select-selected').innerText;
             dateFilterText = dateFilterText.replace('🗓️ ', '');
             if (dateFilterText === '모든 날짜') {
@@ -808,6 +882,9 @@ function fetchData() {
         document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target === this) closeModal('detailModal'); });
         document.getElementById('cardEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('cardEditModal'); });
         document.getElementById('commentEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('commentEditModal'); });
+        
+        // ★ 면접 형식 모달 배경 클릭 시 닫기 추가
+        document.getElementById('formatEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('formatEditModal'); });
         
         window.onload = () => {
             initCustomSelects();
