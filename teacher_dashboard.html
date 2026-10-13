@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>면접 대비반 교사용 대시보드</title>
+    <!-- 캡처를 위한 html2canvas 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); background-attachment: fixed; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; color: #2c3e50; }
         .glass-panel { background: rgba(255, 255, 255, 0.35); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); }
@@ -107,6 +109,10 @@
             .print-col-name { width: 15%; }
             .print-col-sign { width: 20%; }
         }
+        
+        /* 다운로드 리스트 체크박스 스타일 */
+        .dl-checkbox-row { padding: 10px; border-bottom: 1px dashed rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s; }
+        .dl-checkbox-row:hover { background: rgba(102, 126, 234, 0.1); }
     </style>
 </head>
 <body>
@@ -149,6 +155,8 @@
                 <button class="filter-pill" id="sortBtn" onclick="toggleSort()" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71;">🔃 학번 정렬</button>
                 <button class="filter-pill" onclick="resetFilters()" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c;">🔄 필터 초기화</button>
                 
+                <!-- 👇 카드 저장 버튼 추가 👇 -->
+                <button class="filter-pill" onclick="openDownloadModal()" style="background: rgba(155, 89, 182, 0.2); border-color: #9b59b6; color: #9b59b6;">💾 카드 저장</button>
                 <button class="filter-pill" onclick="printAttendance()" style="background: rgba(41, 128, 185, 0.2); border-color: #2980b9; color: #2980b9;">🖨️ 출석부 출력</button>
                 
                 <div class="filter-pills" id="trackFilters" style="border-left: 2px solid rgba(0,0,0,0.1); padding-left: 10px;">
@@ -261,6 +269,43 @@
         </div>
     </div>
 
+    <!-- 5. 학생 카드 이미지 일괄 다운로드 모달 -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="close-btn" onclick="closeModal('downloadModal')">X</button>
+            <h2 style="margin-top:0; border-bottom: 2px solid #eee; padding-bottom: 10px;">💾 학생 카드 이미지 저장</h2>
+            <p style="font-size: 13px; color: #777; margin-bottom: 15px;">저장할 학생을 선택한 후 하단의 저장하기 버튼을 눌러주세요.</p>
+            
+            <div class="filter-group" style="margin-bottom: 15px; flex-wrap: nowrap; gap: 8px;">
+                <select id="dlFilterDate" class="search-input" style="flex: 1; font-weight: normal;" onchange="renderDownloadList()">
+                    <option value="all">🗓️ 모든 날짜</option>
+                    <option value="10월 19일(월)">10월 19일(월)</option>
+                    <option value="11월 24일(화)">11월 24일(화)</option>
+                </select>
+                <select id="dlFilterClass" class="search-input" style="flex: 1; font-weight: normal;" onchange="renderDownloadList()">
+                    <option value="all">🏫 모든 학급</option>
+                </select>
+                <input type="text" id="dlSearchName" class="search-input" style="flex: 1; font-weight: normal;" placeholder="🔍 이름 검색" onkeyup="renderDownloadList()">
+            </div>
+            
+            <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-weight: bold; font-size: 14px; cursor: pointer; color: #2c3e50;">
+                    <input type="checkbox" id="dlSelectAll" onchange="toggleAllDownload(this)" style="margin-right: 5px;"> 전체 선택 / 해제
+                </label>
+                <span id="dlCountLabel" style="font-size: 13px; color: #e15f41; font-weight: bold;">(0명 선택됨)</span>
+            </div>
+            
+            <div id="dlStudentList" style="max-height: 350px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.2); border-radius: 8px; background: rgba(255,255,255,0.7);">
+                <!-- 학생 리스트가 여기에 렌더링됩니다 -->
+            </div>
+            
+            <button class="save-btn" id="executeDownloadBtn" onclick="executeDownload()" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">선택한 카드 저장하기 ⬇️</button>
+        </div>
+    </div>
+
+    <!-- 이미지 생성을 위해 보이지 않는 곳에 그리는 영역 -->
+    <div id="captureContainer" style="position: absolute; left: -9999px; top: -9999px; width: 320px;"></div>
+    
     <!-- 인쇄될 출석부 영역 -->
     <div id="printArea"></div>
 
@@ -583,7 +628,6 @@
                 formatBox.style.color = '#7f8c8d';
             }
             
-            // ★ 글꼴 및 위치 정렬 완벽 수정 부분
             const rawMethod = getMethodValue(student).replace(/\n/g, ' ').trim();
             const passDate = formatToDateOnly(getFlexibleValue(student, '1차 합격', '해당없음'));
             const actualDate = formatToDateOnly(getFlexibleValue(student, '실제 면접', '-'));
@@ -591,14 +635,14 @@
             
             let scheduleHtml = `<div style="display: flex; flex-direction: column; gap: 12px;">`;
             
-            // 고정 너비(120px)를 주어 줄을 깔끔하게 맞추고, 모든 텍스트의 크기와 색상을 제목과 동일하게 통일
-            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 24px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">✅ 1차 합격 여부:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${rawMethod}</span></div>`;
+            // ★ 이전 띄어쓰기 문제 해결 (gap: 10px 적용)
+            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 28px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">✅ 1차 합격 여부:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${rawMethod}</span></div>`;
             
             if(passDate && passDate !== '해당없음' && passDate !== '-' && passDate !== '미입력') { 
-                scheduleHtml += `<div style="display: flex; align-items: center; min-height: 24px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🎯 1차 발표일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${passDate}</span></div>`; 
+                scheduleHtml += `<div style="display: flex; align-items: center; min-height: 28px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🎯 1차 발표일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${passDate}</span></div>`; 
             }
             
-            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 24px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🚨 실제 면접일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${actualDate}</span></div>`;
+            scheduleHtml += `<div style="display: flex; align-items: center; min-height: 28px; gap: 10px;"><span style="font-weight: bold; color: #2c3e50; font-size: 15px; flex-shrink: 0;">🚨 실제 면접일:</span> <span style="font-weight: bold; color: #2c3e50; font-size: 15px;">${actualDate}</span></div>`;
             scheduleHtml += `</div>`;
             
             document.getElementById('m-schedule').innerHTML = scheduleHtml;
@@ -625,7 +669,7 @@
                     });
                     if(!hasAnyData) cardsBox.innerHTML = '<div style="color:#777; font-size:13px; text-align:center;">저장된 지원 정보가 없습니다.</div>';
                 } catch(e) {
-                    cardsBox.innerHTML = '<div style="color:#777; font-size:13px; text-align:center;">데이터를 읽을 수문을 수 없습니다.</div>';
+                    cardsBox.innerHTML = '<div style="color:#777; font-size:13px; text-align:center;">데이터를 읽을 수 없습니다.</div>';
                 }
             } else {
                 cardsBox.innerHTML = '<div style="color:#777; font-size:13px; text-align:center;">아직 등록된 수시 접수 현황이 없습니다.</div>';
@@ -825,10 +869,172 @@
             window.print();
         }
 
+        // ====== 🎨 캡처(다운로드) 관련 로직 ======
+        
+        function openDownloadModal() {
+            // 학급 필터 드롭다운 세팅
+            const classSelect = document.getElementById('dlFilterClass');
+            const classes = new Set();
+            globalData.forEach(row => {
+                const id = getFlexibleValue(row, '학번', '');
+                if (id && id.toString().length >= 3) classes.add(id.toString().substring(0, 3));
+            });
+            const sortedClasses = Array.from(classes).sort();
+            classSelect.innerHTML = '<option value="all">🏫 모든 학급</option>';
+            sortedClasses.forEach(cls => {
+                classSelect.innerHTML += `<option value="${cls}">${cls}반</option>`;
+            });
+            
+            // 초기화
+            document.getElementById('dlFilterDate').value = 'all';
+            document.getElementById('dlSearchName').value = '';
+            document.getElementById('dlSelectAll').checked = false;
+            
+            renderDownloadList();
+            document.getElementById('downloadModal').style.display = 'flex';
+        }
+
+        function renderDownloadList() {
+            const dateFilter = document.getElementById('dlFilterDate').value;
+            const classFilter = document.getElementById('dlFilterClass').value;
+            const searchName = document.getElementById('dlSearchName').value.trim();
+            
+            let filtered = globalData.filter(row => {
+                const d = getFlexibleValue(row, '날짜');
+                const id = getFlexibleValue(row, '학번', '').toString();
+                const name = getFlexibleValue(row, '이름', '').toString();
+                
+                let dateMatch = (dateFilter === 'all') || d.includes(dateFilter);
+                let classMatch = (classFilter === 'all') || id.startsWith(classFilter);
+                let nameMatch = name.includes(searchName);
+                return dateMatch && classMatch && nameMatch;
+            });
+            
+            // 학번순 정렬
+            filtered.sort((a, b) => getFlexibleValue(a, '학번', '').toString().localeCompare(getFlexibleValue(b, '학번', '').toString()));
+            
+            const container = document.getElementById('dlStudentList');
+            container.innerHTML = '';
+            document.getElementById('dlCountLabel').innerText = `(0명 선택됨)`;
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: #777; font-size: 14px;">검색된 학생이 없습니다.</div>';
+                return;
+            }
+            
+            filtered.forEach(student => {
+                const id = getFlexibleValue(student, '학번', '');
+                const name = getFlexibleValue(student, '이름', '');
+                const target = `${getFlexibleValue(student, '대학')} ${getFlexibleValue(student, '전형')}`;
+                
+                const div = document.createElement('label');
+                div.className = 'dl-checkbox-row';
+                div.innerHTML = `
+                    <input type="checkbox" class="dl-checkbox" value="${id}_${name}" data-id="${id}" data-name="${name}" onchange="updateDownloadCount()">
+                    <span style="font-weight: bold; color: #2c3e50; min-width: 80px;">${id} ${name}</span>
+                    <span style="font-size: 13px; color: #7f8c8d;">(${target})</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function toggleAllDownload(source) {
+            const checkboxes = document.querySelectorAll('.dl-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            updateDownloadCount();
+        }
+
+        function updateDownloadCount() {
+            const checkedCount = document.querySelectorAll('.dl-checkbox:checked').length;
+            document.getElementById('dlCountLabel').innerText = `(${checkedCount}명 선택됨)`;
+        }
+        
+        async function executeDownload() {
+            const checkboxes = document.querySelectorAll('.dl-checkbox:checked');
+            if(checkboxes.length === 0) {
+                alert('저장할 학생 카드를 먼저 선택해주세요.');
+                return;
+            }
+            
+            // 다중 다운로드에 대한 브라우저 경고 안내
+            if(!confirm(`선택하신 ${checkboxes.length}명의 학생 카드를 PNG 이미지로 저장하시겠습니까?\n\n※ 여러 장을 다운로드할 때 상단에 '여러 파일 다운로드 허용' 팝업이 뜰 수 있습니다. 반드시 '허용'을 눌러주세요.`)) return;
+            
+            const btn = document.getElementById('executeDownloadBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '저장 중... 모달창을 닫지 마세요 ⏳';
+            btn.disabled = true;
+            
+            for(let i=0; i < checkboxes.length; i++) {
+                const id = checkboxes[i].getAttribute('data-id');
+                const name = checkboxes[i].getAttribute('data-name');
+                const student = globalData.find(s => getFlexibleValue(s, '학번','').toString() === id && getFlexibleValue(s, '이름','').toString() === name);
+                
+                if(student) {
+                    await generateAndDownloadCard(student);
+                    // 파일 여러 개가 동시에 쏟아지면 브라우저가 차단하므로 0.5초 대기
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert('모든 카드 저장이 완료되었습니다!');
+        }
+        
+        async function generateAndDownloadCard(student) {
+            const container = document.getElementById('captureContainer');
+            
+            // 데이터 추출
+            const name = getFlexibleValue(student, '이름', '이름없음');
+            const id = getFlexibleValue(student, '학번', '-');
+            const univ = getFlexibleValue(student, '대학');
+            const type = getFlexibleValue(student, '전형');
+            const dept = getFlexibleValue(student, '학과');
+            const date = getFlexibleValue(student, '날짜');
+            const track = getFlexibleValue(student, '계열');
+            const shortTrack = track ? track.split('(')[0].trim() : '-';
+            
+            const cardsStr = getFlexibleValue(student, '수시접수', '');
+            const hasCards = checkHasCards(cardsStr);
+            const badge = hasCards ? ' <span style="font-size:11px; background:#2ecc71; color:white; padding:2px 6px; border-radius:10px; margin-left: 6px; vertical-align: middle;">카드등록됨</span>' : '';
+            
+            const cmtStr = getFlexibleValue(student, '담임의견', '');
+            const hasCmt = cmtStr && cmtStr.trim().length > 0;
+            const cmtBadge = hasCmt ? ' <span style="font-size:11px; background:#f39c12; color:white; padding:2px 6px; border-radius:10px; margin-left: 6px; vertical-align: middle;">의견등록됨</span>' : '';
+
+            // 캡처용 디자인 (갤러리 카드와 유사하지만 캡처에 유리한 솔리드 배경 적용)
+            container.innerHTML = `
+                <div style="width: 320px; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border: 2px solid #dcdde1; border-radius: 16px; box-sizing: border-box; padding: 25px; font-family: 'Noto Sans KR', sans-serif;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px dashed rgba(0,0,0,0.15); padding-bottom: 12px;">
+                        <div style="font-size: 20px; font-weight: 900; color: #2c3e50;">${name}${badge}${cmtBadge}</div>
+                        <div style="background: rgba(102, 126, 234, 0.15); padding: 5px 10px; border-radius: 8px; font-size: 13px; font-weight: bold; color: #2c3e50;">${id}</div>
+                    </div>
+                    <div style="display: inline-block; background: rgba(255, 154, 158, 0.4); padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #2c3e50; margin-bottom: 15px;">${shortTrack}</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 6px;">🏫 ${univ} ${type}</div>
+                    <div style="font-size: 14px; color: #555; line-height: 1.4;">${dept}</div>
+                    <div style="margin-top: 25px; font-size: 14px; font-weight: bold; color: #e15f41;">🗓️ ${date} 배정</div>
+                </div>
+            `;
+            
+            // DOM을 이미지 캔버스로 변환 (고해상도를 위해 scale: 2 적용)
+            const canvas = await html2canvas(container.firstElementChild, {
+                scale: 2,
+                backgroundColor: null
+            });
+            
+            // a 태그를 생성해 다운로드 트리거
+            const link = document.createElement('a');
+            link.download = `${id}_${name}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // 모달 닫기 이벤트 리스너 추가
         document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target === this) closeModal('detailModal'); });
         document.getElementById('cardEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('cardEditModal'); });
         document.getElementById('commentEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('commentEditModal'); });
         document.getElementById('formatEditModal').addEventListener('click', function(e) { if(e.target === this) closeModal('formatEditModal'); });
+        document.getElementById('downloadModal').addEventListener('click', function(e) { if(e.target === this) closeModal('downloadModal'); });
         
         window.onload = () => { initCustomSelects(); fetchData(); };
     </script>
